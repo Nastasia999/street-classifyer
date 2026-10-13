@@ -1,0 +1,30 @@
+{
+  "segments": 47139,
+  "segments_in_main_component": 46753,
+  "nc": {
+    "pearson_r": NaN,
+    "spearman_r": NaN,
+    "median_ratio_ours_to_depthmapx": 1.0
+  },
+  "td": {
+    "pearson_r": 0.9771,
+    "spearman_r": 0.9772,
+    "median_ratio_ours_to_depthmapx": 1.2157
+  },
+  "ch": {
+    "pearson_r": 0.8493,
+    "spearman_r": 0.9207,
+    "median_ratio_ours_to_depthmapx": NaN
+  },
+  "nain": {
+    "pearson_r": 0.9778,
+    "spearman_r": 0.9772,
+    "median_ratio_ours_to_depthmapx": 0.8225
+  },
+  "nach": {
+    "pearson_r": 0.9315,
+    "spearman_r": 0.9215,
+    "median_ratio_ours_to_depthmapx": NaN
+  },
+  "tulip_bins": 64
+}

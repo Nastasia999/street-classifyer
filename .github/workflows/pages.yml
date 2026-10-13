@@ -1,0 +1,50 @@
+# Publishes web/ to GitHub Pages.
+# Settings -> Pages -> Source: GitHub Actions.
+# Settings -> Secrets and variables -> Actions: BASEMAP_TILES (secret: tile URL with the key)
+# or MAPTILER_KEY (secret); REPO_URL (variable, optional).
+name: Web map
+
+on:
+  push:
+    branches: [main]
+    paths: ["web/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write web/config.js from repository secrets
+        env:
+          BASEMAP_TILES: ${{ secrets.BASEMAP_TILES }}
+          MAPTILER_KEY: ${{ secrets.MAPTILER_KEY }}
+          REPO_URL: ${{ vars.REPO_URL }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          cfg = {"basemapTiles": os.environ.get("BASEMAP_TILES", ""),
+                 "maptilerKey": os.environ.get("MAPTILER_KEY", ""),
+                 "repoUrl": os.environ.get("REPO_URL") or "https://github.com/${{ github.repository }}"}
+          open("web/config.js", "w", encoding="utf-8").write("window.SM_CONFIG = " + json.dumps(cfg) + ";\n")
+          PY
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+      - id: deployment
+        uses: actions/deploy-pages@v4

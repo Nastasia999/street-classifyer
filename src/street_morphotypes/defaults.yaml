@@ -1,0 +1,345 @@
+# =============================================================================
+# street-morphotypes — default configuration
+#
+# A city config is deep-merged on top of this file, so it only needs to state
+# what differs (at minimum the `area` section).
+# Merge rules: mappings are merged key by key, lists and scalars are replaced.
+# Relative paths are resolved against the current working directory.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Study area: segments inside it are classified. Everything else (network
+# buffer, context margin) only exists to compute metrics without edge effects.
+# -----------------------------------------------------------------------------
+area:
+  name: null                  # slug for cache/output folders, e.g. "irkutsk"
+  mode: place                 # place | point | polygon
+  place: null                 # geocodable name, e.g. "Irkutsk, Russia"
+  point: null                 # {lat: 51.5080, lon: -0.1281, radius_m: 3000}
+  polygon: null               # {path: data/area.gpkg, layer: null}
+  crs: auto                   # "auto" = local UTM zone, or e.g. "EPSG:32648"
+  network_buffer_m: 2000      # extra street network around the area (space syntax edge effect)
+  context_buffer_m: 150       # extra margin for buildings / POI / green downloads
+
+paths:
+  cache_dir: cache            # downloaded layers: <cache_dir>/<area.name>/
+  output_dir: outputs         # results:          <output_dir>/<area.name>/
+  web_dir: web                # web map page; its data/ is rebuilt from <output_dir>/ (see output.web)
+
+overpass:
+  # Endpoints are tried in order until one answers (some are blocked in some networks).
+  urls:
+    - https://overpass-api.de/api
+    - https://maps.mail.ru/osm/tools/overpass/api
+    - https://overpass.kumi.systems/api
+  timeout_s: 300
+  retries: 2                  # per endpoint
+
+# -----------------------------------------------------------------------------
+# Input layers. `osm` downloads from OpenStreetMap; `file` reads your own layer
+# (GeoPackage / Shapefile / GeoJSON); `none` disables the layer and every
+# metric that depends on it. Expected column names for `file` sources are
+# listed in README.md -> "Bring your own data".
+# -----------------------------------------------------------------------------
+layers:
+  network:        {source: osm}
+  buildings:      {source: osm}
+  pois:           {source: osm}
+  landuse:        {source: osm}
+  green:          {source: osm}
+  transit_routes: {source: osm}
+  transit_stops:  {source: osm}
+
+# -----------------------------------------------------------------------------
+# Street network
+# -----------------------------------------------------------------------------
+network:
+  # OSM highway classes that form the city network, ordered from the most to
+  # the least important (the order resolves segments merged from several ways).
+  highway_types:
+    - motorway
+    - trunk
+    - primary
+    - secondary
+    - tertiary
+    - unclassified
+    - residential
+    - living_street
+    - motorway_link
+    - trunk_link
+    - primary_link
+    - secondary_link
+    - tertiary_link
+  exclude_access: [private, "no"]
+  # Kept in the space syntax graph but not classified (ramps are connectors, not streets).
+  unclassified_highway_types: [motorway_link, trunk_link, primary_link, secondary_link, tertiary_link]
+  consolidate_tolerance_m: 10 # merge junction nodes closer than this (complex intersections); 0 = off
+  merge_pseudo_junctions: true # join segments meeting at a node where no other street meets, so that
+                               # every segment runs junction to junction (user ids are kept as lists)
+  min_segment_length_m: 30    # shorter segments stay in the graph but are not classified
+  snap_tolerance_m: 1.0       # endpoint snapping when the network comes from a file
+  # Divided roads are kept as two carriageways (each side has its own context).
+  # A twin is a parallel one-way segment; for twinned segments context metrics
+  # use the outer side only, and lanes / PT routes are summed over both carriageways.
+  dual_carriageway:
+    detect: true
+    max_distance_m: 40
+    max_angle_deg: 20
+    min_overlap: 0.5          # share of the segment length running alongside the twin
+
+# -----------------------------------------------------------------------------
+# Space syntax: angular segment analysis on the dual graph.
+# -----------------------------------------------------------------------------
+space_syntax:
+  radii: [n, 800, 2000]       # "n" = global; numbers = metric radii in metres
+  angle_unit_deg: 90          # a turn of this many degrees costs 1 (depthmapX convention)
+  direction_sample_m: 15      # distance from a junction used to measure segment direction
+  n_jobs: -1                  # workers for metric-radius analysis (-1 = all cores)
+
+# -----------------------------------------------------------------------------
+# Segment metrics. Every metric has its own buffer. Buffers are one-sided
+# strips measured from the carriageway edge on each side of the segment.
+# OSM tag filters: {key: true} matches any value, {key: [v1, v2]} matches
+# listed values; explicit values take precedence over `true` when categories
+# compete (e.g. office=government -> social, office=company -> commercial).
+# -----------------------------------------------------------------------------
+metrics:
+  carriageway:
+    lane_width_m: 3.5         # half the carriageway width is added to every buffer
+
+  frontage:
+    enabled: true
+    buffer_m: 25              # max setback of a building that still forms the street wall
+
+  poi_density:
+    enabled: true
+    buffer_m: 50
+    assignment: nearest       # nearest: each POI counts for its nearest segment; all: for every segment in reach
+    tags:
+      shop: true
+      office: true
+      craft: true
+      healthcare: true
+      amenity: [restaurant, cafe, fast_food, bar, pub, food_court, ice_cream, biergarten, nightclub,
+                bank, bureau_de_change, pharmacy, clinic, doctors, dentist, hospital, veterinary,
+                school, kindergarten, childcare, college, university, language_school, music_school,
+                library, theatre, cinema, arts_centre, community_centre, social_facility,
+                place_of_worship, townhall, courthouse, police, post_office, marketplace,
+                car_wash, car_rental, fuel, driving_school, coworking_space]
+      tourism: [hotel, hostel, guest_house, motel, apartment, museum, gallery]
+      leisure: [fitness_centre, sports_centre, dance, bowling_alley]
+
+  green_area:
+    enabled: true
+    buffer_m: 100
+    tags:
+      leisure: [park, garden, nature_reserve, dog_park]
+      landuse: [grass, forest, meadow, recreation_ground, village_green, flowerbed]
+      natural: [wood, scrub, grassland, heath]
+
+  building_age:
+    enabled: true
+    buffer_m: 50
+    osm_tags: [start_date, "building:start_date", construction_date, year_of_construction, "building:year"]
+    min_coverage: 0.3         # share of buildings with a known year; below it the metric is dropped
+    min_year: 1000
+    reference_year: 2026      # age = reference_year - construction year; fixed so that features and
+                              # saved models do not change with the date of the run
+
+  land_use:
+    enabled: true
+    buffer_m: 50
+    floor_height_m: 3.0       # converts `height` to floors when `building:levels` is missing
+    min_level_samples: 20     # min buildings of a type with known levels to use the city median
+    default_levels:           # fallback floors by `building` value
+      _default: 2
+      house: 2
+      detached: 2
+      semidetached_house: 2
+      terrace: 2
+      bungalow: 1
+      apartments: 5
+      residential: 5
+      dormitory: 5
+      commercial: 2
+      retail: 1
+      office: 4
+      hotel: 5
+      industrial: 1
+      warehouse: 1
+      garage: 1
+      garages: 1
+      shed: 1
+      school: 3
+      kindergarten: 2
+      hospital: 4
+      university: 4
+    mixed_use_ground_floor: true  # a residential building with shops inside: ground floor -> commercial
+    max_unknown_share: 0.6    # segments with a larger share of unknown-function floor area get C_null
+    categories: [residential, commercial, social, industrial, other]
+    # 1st step of the cascade: the `building` tag.
+    building_tags:
+      residential: [apartments, residential, house, detached, semidetached_house, terrace,
+                    dormitory, bungalow, cabin, farm, static_caravan, houseboat]
+      commercial:  [commercial, retail, office, supermarket, kiosk, hotel, mall]
+      social:      [school, kindergarten, college, university, hospital, public, civic, government,
+                    religious, church, cathedral, chapel, mosque, temple, synagogue, shrine,
+                    monastery, sports_hall, sports_centre, stadium, museum, library, fire_station]
+      industrial:  [industrial, warehouse, factory, manufacture, hangar, depot, storage_tank, works]
+      other:       [garage, garages, shed, carport, roof, hut, service, transformer_tower,
+                    parking, transportation, train_station, construction, ruins, toilets,
+                    greenhouse, barn, farm_auxiliary]
+    # 2nd step: POIs inside the footprint (or tags on the building itself).
+    poi_tags:
+      commercial:
+        shop: true
+        office: true
+        craft: true
+        amenity: [restaurant, cafe, fast_food, bar, pub, food_court, nightclub, bank, pharmacy,
+                  marketplace, car_wash, car_rental, fuel, bureau_de_change, coworking_space]
+        tourism: [hotel, hostel, guest_house, motel]
+      social:
+        healthcare: true
+        amenity: [school, kindergarten, childcare, college, university, hospital, clinic, doctors,
+                  dentist, library, theatre, cinema, arts_centre, community_centre, social_facility,
+                  place_of_worship, townhall, courthouse, police, fire_station, post_office,
+                  music_school, language_school]
+        office: [government, ngo, educational_institution]
+        tourism: [museum, gallery]
+        leisure: [sports_centre]
+      industrial:
+        man_made: [works, wastewater_plant, water_works]
+        industrial: true
+    # 3rd step: the land-use polygon around the building.
+    landuse_tags:
+      residential:
+        landuse: [residential]
+      commercial:
+        landuse: [commercial, retail]
+      social:
+        landuse: [education, religious]
+        amenity: [school, kindergarten, college, university, hospital, clinic]
+      industrial:
+        landuse: [industrial, railway, port, depot, quarry]
+      other:
+        landuse: [garages, construction, military, cemetery]
+
+  lanes:
+    enabled: true
+    # Total two-way lanes used when `lanes` is missing; one-way segments get half (rounded up).
+    defaults_by_highway:
+      motorway: 4
+      trunk: 4
+      primary: 4
+      secondary: 2
+      tertiary: 2
+      unclassified: 2
+      residential: 2
+      living_street: 1
+      motorway_link: 2
+      trunk_link: 2
+      primary_link: 2
+      secondary_link: 2
+      tertiary_link: 2
+
+  maxspeed:
+    enabled: true
+    defaults_by_highway:      # km/h, used when `maxspeed` is missing — adjust to the country
+      motorway: 110
+      trunk: 90
+      primary: 60
+      secondary: 60
+      tertiary: 60
+      unclassified: 60
+      residential: 60
+      living_street: 20
+      motorway_link: 60
+      trunk_link: 60
+      primary_link: 60
+      secondary_link: 60
+      tertiary_link: 60
+    zone_values:              # implicit maxspeed values, km/h
+      "RU:urban": 60
+      "RU:rural": 90
+      "RU:living_street": 20
+      "RU:motorway": 110
+      "GB:nsl_single": 96.6
+      "GB:nsl_dual": 112.7
+      "GB:motorway": 112.7
+      "DE:urban": 50
+      "DE:rural": 100
+      "DE:living_street": 7
+      "PL:urban": 50
+      "PL:rural": 90
+      "PL:living_street": 20
+      "PL:zone30": 30
+      walk: 7
+      none: 130
+
+  transit:
+    enabled: true
+    route_types: [bus, trolleybus, tram, share_taxi, minibus]
+    dedupe_by: ref            # ref: route variants/directions with the same ref count once; id: count relations
+    stop_tags:
+      highway: [bus_stop]
+      railway: [tram_stop]
+      public_transport: [platform]
+    stop_merge_distance_m: 30 # stop points closer than this are one stop (platform pairs, poles)
+    stops_buffer_m: 50
+    geometric_match_m: 10     # used only when segments have no OSM way ids (network from a file)
+
+# -----------------------------------------------------------------------------
+# Your own segment attributes (traffic counts, pedestrian flows, ...).
+# Each entry: a layer + the columns to transfer + the block they join.
+#   - path: data/ped_counts.gpkg
+#     layer: null
+#     columns: {ped_flow: transport, car_flow: transport, survey_note: none}
+#     join: spatial           # spatial: by geometry; id: by `id_column` == network `id_column`
+#     id_column: null
+#     max_distance_m: 15      # spatial join tolerance
+# -----------------------------------------------------------------------------
+extra_features: []
+
+# -----------------------------------------------------------------------------
+# Clustering: the transport and context blocks are clustered independently
+# (in parallel); the morphotype is the cross product T x C.
+# Features that are disabled or missing are dropped with a warning.
+# -----------------------------------------------------------------------------
+clustering:
+  transport:
+    features: [lanes, maxspeed, pt_routes, pt_stops_per_100m, ss_nain_n, ss_nach_n, ss_nain_800, ss_nach_800]
+    k: auto                   # auto = best silhouette in k_range, or an integer
+    order_by: ss_nach_n       # clusters are numbered by ascending mean of this feature
+  context:
+    features: [frontage, poi_per_100m, green_m2_per_100m, building_age_median,
+               fn_residential, fn_commercial, fn_social, fn_industrial]
+    k: auto
+    order_by: poi_per_100m
+  k_range: [2, 6]
+  min_cluster_frac: 0.04      # auto-k ignores solutions with a smaller cluster
+  skew_threshold: 1.0         # log1p for non-negative features with skewness above it
+  max_mode_share: 0.95        # a feature whose most frequent value covers more segments is dropped (near-constant)
+  clip_scaled: 5.0            # scaled values are clipped to +-this: a lone extreme segment cannot form its own cluster
+  kmeans_n_init: 25
+  gmm_covariance_type: full    # Gaussian model of the KMeans clusters for confidence: full | tied | diag | spherical
+  random_state: 0
+  min_silhouette: 0.10        # borderline flag thresholds
+  min_confidence: 0.60
+  silhouette_sample_size: 10000  # sample used for the mean silhouette while scanning k
+  correlation_warning: 0.8    # |r| above it is reported by `scan`
+
+# Manual names override the generated ones, e.g.
+#   transport: {0: "Local street", 1: "Connector", 2: "Arterial"}
+#   morphotype: {"2-1": "Central high street"}      # key = "<T>-<C>"
+names:
+  transport: {}
+  context: {}
+  morphotype: {}
+
+output:
+  excel: true
+  gpkg: true
+  figures: true
+  # After `run`, rebuild <web_dir>/data/ from every run in <output_dir>/ that has web: true.
+  # Set to false for experiments and test areas: the run is then left out of the web map.
+  web: true

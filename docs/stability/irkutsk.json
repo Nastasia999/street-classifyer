@@ -1,0 +1,31 @@
+{
+  "city": "irkutsk",
+  "runs": 30,
+  "subsample": 0.8,
+  "k": {
+    "transport": 4,
+    "context": 6
+  },
+  "transport": {
+    "ARI_mean": 0.995,
+    "ARI_min": 0.987,
+    "jaccard_by_cluster": {
+      "T0 · low through-movement Rn, low integration R800 m": 0.995,
+      "T1 · average profile": 0.998,
+      "T2 · high PT stops, high PT routes": 0.987,
+      "T3 · high PT routes, high lanes": 0.994
+    }
+  },
+  "context": {
+    "ARI_mean": 0.925,
+    "ARI_min": 0.868,
+    "jaccard_by_cluster": {
+      "C0 · average profile": 0.971,
+      "C1 · high commercial, high greenery": 0.688,
+      "C2 · high greenery, low residential": 0.895,
+      "C3 · high organisations, high commercial, high social": 0.791,
+      "C4 · high greenery, high organisations": 0.605,
+      "C5 · high commercial, high organisations, low residential": 0.689
+    }
+  }
+}

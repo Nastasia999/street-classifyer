@@ -1,0 +1,19 @@
+{
+  "runs": [
+    "irkutsk_local",
+    "pooled"
+  ],
+  "segments": 4186,
+  "T_cluster": {
+    "ARI": 0.97,
+    "NMI": 0.945
+  },
+  "C_cluster": {
+    "ARI": 0.457,
+    "NMI": 0.384
+  },
+  "morphotype": {
+    "ARI": 0.687,
+    "NMI": 0.688
+  }
+}

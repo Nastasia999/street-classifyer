@@ -1,0 +1,11 @@
+# Small area for quick tests: 1 km around the centre of Irkutsk.
+area:
+  name: smoke_irkutsk
+  mode: point
+  point: {lat: 52.2870, lon: 104.2810, radius_m: 1000}
+  network_buffer_m: 1000
+space_syntax:
+  radii: [n, 800]
+output:
+  figures: true
+  web: false                   # a test area: keep it off the web map

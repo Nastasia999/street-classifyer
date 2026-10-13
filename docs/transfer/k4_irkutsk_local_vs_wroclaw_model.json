@@ -1,0 +1,19 @@
+{
+  "runs": [
+    "irkutsk_local",
+    "wroclaw_model"
+  ],
+  "segments": 4186,
+  "T_cluster": {
+    "ARI": 0.914,
+    "NMI": 0.868
+  },
+  "C_cluster": {
+    "ARI": 0.639,
+    "NMI": 0.578
+  },
+  "morphotype": {
+    "ARI": 0.762,
+    "NMI": 0.737
+  }
+}

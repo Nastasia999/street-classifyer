@@ -1,0 +1,12 @@
+# Experiment: pooled typology with k = 4 context classes.
+extends: ../irkutsk_wroclaw_pooled.yaml
+name: irkutsk_wroclaw
+cities:
+  - configs/experiments/irkutsk_context_k4.yaml
+  - configs/experiments/wroclaw_context_k4.yaml
+paths:
+  output_dir: outputs/experiments/context_k4
+clustering:
+  context: {k: 4}
+output:
+  web: false                     # experiments stay off the web map

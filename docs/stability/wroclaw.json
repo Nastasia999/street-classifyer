@@ -1,0 +1,29 @@
+{
+  "city": "wroclaw",
+  "runs": 30,
+  "subsample": 0.8,
+  "k": {
+    "transport": 4,
+    "context": 4
+  },
+  "transport": {
+    "ARI_mean": 0.983,
+    "ARI_min": 0.935,
+    "jaccard_by_cluster": {
+      "T0 · low through-movement Rn, low speed limit": 0.992,
+      "T1 · low speed limit": 0.99,
+      "T2 · high PT stops, high PT routes": 0.989,
+      "T3 · high lanes, high PT routes": 0.982
+    }
+  },
+  "context": {
+    "ARI_mean": 0.883,
+    "ARI_min": 0.618,
+    "jaccard_by_cluster": {
+      "C0 · low greenery": 0.961,
+      "C1 · average profile": 0.936,
+      "C2 · high social, low residential": 0.771,
+      "C3 · high commercial, high organisations": 0.925
+    }
+  }
+}

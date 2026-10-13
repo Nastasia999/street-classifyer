@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+build/
+dist/
+
+# Downloaded OSM data and pipeline outputs
+cache/
+outputs/
+*.gpkg-journal
+
+# IDE / OS
+.vscode/
+.idea/
+.claude/
+desktop.ini
+Thumbs.db
+
+# Run logs
+*.log
+
+# Large validation tables (regenerate with scripts/validate_depthmapx.py)
+docs/validation/*.csv
+
+# Personal reports (Russian), not part of the package
+reports/
+
+# Web map secrets (basemap key): copy web/config.example.js to web/config.js
+web/config.js

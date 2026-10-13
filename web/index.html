@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Street Morphotypes</title>
+  <meta name="description" content="A data-driven street typology from OpenStreetMap: space syntax and urban context, clustered independently. By Anastasiia Erokhina.">
+  <meta name="author" content="Anastasiia Erokhina">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="City and layers">
+      <header class="brand">
+        <div class="brand-row">
+          <h1>Street Morphotypes</h1>
+          <button class="help" id="about-open" type="button" aria-haspopup="dialog" aria-controls="about"
+                  title="About the method">?</button>
+        </div>
+        <p>Every street as a link in the network and as a place, clustered independently.</p>
+        <p class="byline">by Anastasiia Erokhina</p>
+      </header>
+
+      <section class="block">
+        <h2 class="block-title">City</h2>
+        <div class="cities" id="cities" role="radiogroup" aria-label="City"></div>
+      </section>
+
+      <nav class="block layers" id="layers" aria-label="Layers"></nav>
+
+      <footer class="sidebar-foot">
+        <span class="model-dot" aria-hidden="true"></span> used in clustering
+        <span class="model-dot off" aria-hidden="true"></span> reference only
+        <a href="#" id="repo-link" target="_blank" rel="noopener">Code</a>
+      </footer>
+    </aside>
+
+    <main class="map-wrap">
+      <div id="map" aria-label="Map"></div>
+      <div class="map-status" id="map-status" hidden></div>
+      <div class="basemap-note" id="basemap-note" hidden></div>
+    </main>
+
+    <aside class="panel" aria-label="Legend and details">
+      <section class="block legend-block">
+        <div class="legend-head">
+          <h2 class="legend-title" id="legend-title">Layer</h2>
+          <button class="reset" id="legend-reset" type="button" hidden>Show all</button>
+        </div>
+        <p class="legend-note" id="legend-note"></p>
+        <div class="legend" id="legend"></div>
+      </section>
+
+      <section class="block details-block" id="details">
+        <p class="placeholder">Click a street segment to see its values.</p>
+      </section>
+
+      <section class="block facts-block">
+        <h2 class="block-title" id="facts-title">City</h2>
+        <dl class="facts" id="facts"></dl>
+      </section>
+    </aside>
+  </div>
+
+  <div class="tip" id="tip" role="tooltip" hidden></div>
+
+  <!-- About: a short version of docs/METHODOLOGY.md. Case-study numbers come from the README. -->
+  <div class="about" id="about" role="dialog" aria-modal="true" aria-labelledby="about-title" hidden>
+    <div class="about-inner" tabindex="-1">
+      <header class="about-head">
+        <div>
+          <p class="about-kicker">About the method</p>
+          <h2 id="about-title">Street Morphotypes: a data-driven street typology from OpenStreetMap</h2>
+          <p class="byline">Anastasiia Erokhina · 2026</p>
+        </div>
+        <button class="about-close" id="about-close" type="button" aria-label="Close">
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+            <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+          </svg>
+        </button>
+      </header>
+
+      <div class="about-cols">
+        <section>
+          <h3>The question</h3>
+          <p>A street is two things at once: a <b>link</b> in the movement network and a <b>place</b> lined by
+            buildings and activities (Marshall 2005; Jones, Roberts &amp; Morris 2007). Design guidance is
+            increasingly written per street type, yet types are usually assigned by hand from the road hierarchy,
+            which describes only the link. Can both roles be measured from open data alone, and does the
+            resulting typology carry over from one city to another?</p>
+
+          <h3>Method</h3>
+          <ol class="steps">
+            <li><b>Segments.</b> The OpenStreetMap network is split from junction to junction; the two carriageways
+              of a divided road keep their own sides.</li>
+            <li><b>Link.</b> Space syntax angular segment analysis: integration (NAIN) and through-movement (NACH)
+              for the whole city (Rn) and within a 10-minute walk (800 m); lanes, public transport routes and stops.</li>
+            <li><b>Place.</b> Measured in one-sided strips beyond the carriageway edge: street-wall continuity,
+              organisations, greenery and the floor-area shares of residential, commercial, social and industrial use.</li>
+            <li><b>Two clusterings.</b> Each block is clustered on its own (k-means, k chosen by silhouette), so neither
+              swamps the other. The <b>morphotype</b> is the pair: transport class × context class. A Gaussian mixture
+              gives each segment a confidence; uncertain segments are flagged as borderline.</li>
+          </ol>
+        </section>
+
+        <section>
+          <h3>Case study: Irkutsk and Wrocław</h3>
+          <p>Two cities of similar size (620,000 and 670,000 people), each with a historic core and large post-war
+            housing estates, processed with the same defaults: 4,186 and 6,632 classified segments.</p>
+          <ul class="findings">
+            <li><b>The transport typology is universal.</b> The four classes found independently in both cities
+              (local access streets, ordinary streets, PT streets with stops, PT arterials) are practically the same:
+              a city labelled by the other city's model agrees with its own labels at ARI 0.91.</li>
+            <li><b>The context typology is partly city-specific</b> (ARI 0.44–0.61). Built-up and green streets
+              recur, but “commercial” is relative, and Wrocław's institutional streets have no counterpart in
+              Irkutsk. A typology meant to carry design guidance across cities should be trained on a diverse pool of
+              cities, not on one.</li>
+          </ul>
+          <table class="checks">
+            <thead><tr><th>Check</th><th>Transport</th><th>Context</th></tr></thead>
+            <tbody>
+              <tr><td>Bootstrap stability, mean ARI (Irkutsk / Wrocław)</td><td>0.995 / 0.98</td><td>0.93 / 0.88</td></tr>
+              <tr><td>Transfer to the other city, ARI</td><td>0.91</td><td>0.44–0.61</td></tr>
+            </tbody>
+          </table>
+          <p class="small">Space syntax was checked against depthmapX on a 47,000-segment network: rank correlation
+            0.98 for NAIN and 0.92 for NACH.</p>
+
+          <h3>Limitations</h3>
+          <p>Everything rests on OpenStreetMap. Missing lanes and speed limits are filled with national defaults
+            (Irkutsk 58% / 60%, Wrocław 45% / 21% of segments); building use is estimated from tags, land use and
+            points of interest (4–8% of floor area stays unknown); building age is dropped where OSM has too few dates.
+            Class names are written by hand from the cluster profiles shown in the legend.</p>
+        </section>
+
+        <section>
+          <h3>Reading the map</h3>
+          <dl class="glossary">
+            <dt>NAIN</dt><dd>Normalised angular integration: how easy a street is to reach from everywhere within the radius.</dd>
+            <dt>NACH</dt><dd>Normalised angular choice: how often a street lies on the simplest routes, i.e. through-movement.</dd>
+            <dt>Rn, 800 m</dt><dd>Radius of the analysis: the whole network, or 800 m along the streets.</dd>
+            <dt>T0…T3, C0…C5</dt><dd>Transport and context classes, numbered by through-movement and by organisations per 100 m (low → high).</dd>
+            <dt>C_null</dt><dd>Segments with too little building data for a reliable context class.</dd>
+            <dt>Silhouette</dt><dd>How well a segment fits its class rather than the nearest other one (−1…1).</dd>
+            <dt>Borderline</dt><dd>A segment whose class is uncertain: low silhouette or low model confidence in either block.</dd>
+            <dt>ARI</dt><dd>Adjusted Rand index: agreement of two labellings, 1 = identical, 0 = chance.</dd>
+          </dl>
+
+          <h3>Data, code, references</h3>
+          <p class="small">Map data © OpenStreetMap contributors (ODbL). Code under the MIT licence; the full
+            methodology is in <code>docs/METHODOLOGY.md</code><span id="about-repo"></span>.</p>
+          <p class="small refs">Hillier &amp; Iida 2005 · Turner 2001 · Hillier, Yang &amp; Turner 2012 ·
+            Marshall 2005 · Jones, Roberts &amp; Morris 2007 · Hennig 2007 · Boeing 2025</p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="config.js"></script>
+  <script src="data/manifest.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

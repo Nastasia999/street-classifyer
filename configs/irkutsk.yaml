@@ -1,0 +1,22 @@
+# Irkutsk, Russia — whole city (administrative boundary from OSM).
+area:
+  name: irkutsk
+  mode: place
+  place: "Irkutsk, Irkutsk Oblast, Russia"
+  network_buffer_m: 2000
+
+# Names of the classes, written after reading their profiles (outputs/irkutsk/morphotypes.xlsx).
+# They belong to this run: with another k or new data, check the profiles and rename.
+names:
+  transport:
+    0: Local access street
+    1: Ordinary street
+    2: Public transport street with stops
+    3: Public transport arterial
+  context:
+    0: Residential street without services
+    1: Commercial roadside with set-back buildings
+    2: Green street with sparse buildings
+    3: Residential street with services
+    4: Green mixed-use street
+    5: Commercial high street

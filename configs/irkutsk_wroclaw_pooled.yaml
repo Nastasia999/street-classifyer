@@ -1,0 +1,8 @@
+# Both cities clustered together into one shared typology.
+# The saved model (outputs/irkutsk_wroclaw/model.joblib) can then label any other city:
+#   street-morphotypes apply configs/<city>.yaml --model outputs/irkutsk_wroclaw/model.joblib
+mode: pooled
+name: irkutsk_wroclaw
+cities:
+  - configs/irkutsk.yaml
+  - configs/wroclaw.yaml

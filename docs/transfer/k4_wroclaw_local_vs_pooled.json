@@ -1,0 +1,19 @@
+{
+  "runs": [
+    "wroclaw_local",
+    "pooled"
+  ],
+  "segments": 6632,
+  "T_cluster": {
+    "ARI": 0.907,
+    "NMI": 0.888
+  },
+  "C_cluster": {
+    "ARI": 0.408,
+    "NMI": 0.524
+  },
+  "morphotype": {
+    "ARI": 0.546,
+    "NMI": 0.723
+  }
+}

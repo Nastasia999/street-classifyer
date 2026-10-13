@@ -1,0 +1,12 @@
+# Experiment: the same number of context classes (k = 4) in every run,
+# to separate the effect of k from the transferability of the typology.
+extends: ../wroclaw.yaml
+paths:
+  output_dir: outputs/experiments/context_k4
+clustering:
+  context: {k: 4}
+output:
+  web: false                     # experiments stay off the web map
+names:                           # the classes differ from the main run: generated names
+  transport: null
+  context: null
