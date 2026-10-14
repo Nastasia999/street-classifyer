@@ -55,3 +55,24 @@ def test_export_web_reflects_current_outputs(tmp_path):
     assert export_web(out, web) == ["gamma"]
     assert [p.name for p in (web / "data" / "cities").iterdir()] == ["gamma.js"]
     assert '"gamma"' in (web / "data" / "manifest.js").read_text(encoding="utf-8")
+
+
+def test_city_gets_every_typology_that_labelled_it(tmp_path):
+    out, web = tmp_path / "outputs", tmp_path / "web"
+    _run(out, "alpha", ["alpha"])
+    _run(out, "beta", ["beta"])
+    _run(out / "alpha", "applied_beta", ["alpha"])
+    summary = json.loads((out / "alpha" / "applied_beta" / "summary.json").read_text(encoding="utf-8"))
+    summary["trained_on"] = ["beta"]
+    (out / "alpha" / "applied_beta" / "summary.json").write_text(json.dumps(summary), encoding="utf-8")
+    _run(out, "ab_pooled", ["alpha", "beta"])
+
+    export_web(out, web)
+    manifest = json.loads((web / "data" / "manifest.js").read_text(encoding="utf-8").split("=", 1)[1].rstrip(";\n"))
+    alpha = next(c for c in manifest["cities"] if c["id"] == "alpha")
+    assert [(t["kind"], t["key"]) for t in alpha["typologies"]] == [("own", ""), ("model", "@1"), ("pooled", "@2")]
+    assert alpha["typologies"][1]["label"] == "Beta model"
+    assert "compare" not in alpha["typologies"][0]
+    assert alpha["typologies"][1]["compare"]["transport"]["crosswalk"]["counts"] == [[2]]
+    data = (web / "data" / "cities" / "alpha.js").read_text(encoding="utf-8")
+    assert '"T_cluster@1"' in data and '"T_cluster@2"' in data

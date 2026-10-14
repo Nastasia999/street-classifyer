@@ -13,15 +13,18 @@
   const CARTO_POSITRON = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
 
   // Palette of src/street_morphotypes/viz/figures.py
+  const CHANGED = { transport: "#1c5cab", context: "#c4501f" };  // streets that change class
+  const MERGED = { transport: "#86b6ef", context: "#f2996f" };   // streets whose class merges into another
   const COL = { none: "#d9d8d1", cNull: "#b5b4ad", zero: "#d3d2cb", confident: "#a3a29b", borderline: "#e34948", dim: "#dcdbd4" };
   const SEQ_BLUE = ["#cde2fb", "#86b6ef", "#3987e5", "#256abf", "#184f95", "#0d366b"];
   const SEQ_ORANGE = ["#f6c2a8", "#f2996f", "#eb6834", "#c4501f", "#933a12", "#6b2a0c"];
   const BLUE_ORDINAL = ["#86b6ef", "#5598e7", "#2a78d6", "#1c5cab", "#104281", "#0d366b"];
   const ORANGE_ORDINAL = SEQ_ORANGE;
   const GROUPS = [
-    { id: "transport", title: "Transport", ramp: SEQ_BLUE },
-    { id: "context", title: "Context", ramp: SEQ_ORANGE },
-    { id: "morphotypes", title: "Street morphotypes", ramp: null },
+    { id: "transport", title: "Transport" },
+    { id: "context", title: "Context" },
+    { id: "morphotypes", title: "Street morphotypes" },
+    { id: "compare", title: "Difference from own typology" },
   ];
   const DEFAULT_LAYER = "morphotype";
 
@@ -42,7 +45,8 @@
     defaults: "Share of segments where OpenStreetMap has no lanes / speed-limit tag, filled with defaults by road class.",
     unknown: "Floor area whose use could not be estimated from building tags, land use or points of interest.",
     classified: "Segments inside the study area that took part in clustering (very short or isolated ones do not).",
-    k: "Number of transport and context classes, each chosen by its own silhouette.",
+    k: "Number of transport and context classes of the typology shown.",
+    ari: "Adjusted Rand index: agreement of two labellings of the same streets, 1 = identical, 0 = chance.",
   };
   /** A word with a dotted underline that explains itself on hover or focus. */
   function term(text, key) {
@@ -52,7 +56,8 @@
     return t;
   }
 
-  const state = { city: null, data: null, byId: new Map(), layerId: DEFAULT_LAYER, isolate: null, selected: null, hover: null };
+  const state = { city: null, typology: null, typologyKind: null, data: null, byId: new Map(),
+                  layerId: DEFAULT_LAYER, isolate: null, selected: null, hover: null };
 
   // ── Colours ────────────────────────────────────────────────────────────────
 
@@ -75,17 +80,73 @@
   // ── Layer model ────────────────────────────────────────────────────────────
 
   const city = () => MANIFEST.cities.find((c) => c.id === state.city);
-  const layerDef = (id = state.layerId) => (city() ? city().layers.find((l) => l.id === id) : null);
-  const clusterList = (block) => city().clusters[block];
-  const clusterColors = (block) => {
-    const list = clusterList(block).filter((c) => c.id >= 0);
+  const allLayers = () => (city() ? [...city().layers, ...changeLayers()] : []);
+  const layerDef = (id = state.layerId) => allLayers().find((l) => l.id === id) || null;
+  /** The active labelling of the city: its own typology, another city's model or a pooled one. */
+  const typo = () => {
+    const c = city();
+    return c ? c.typologies.find((t) => t.id === state.typology) || c.typologies[0] : null;
+  };
+  const ownTypo = () => city().typologies.find((t) => t.kind === "own") || null;
+  /** Name of a label column (T_cluster, borderline, …) in a typology, by default the active one. */
+  const lab = (name, t = typo()) => name + (t ? t.key : "");
+  const blockCol = (block) => (block === "transport" ? "T_cluster" : "C_cluster");
+  const clusterList = (block, t = typo()) => t.clusters[block];
+
+  /** Layers that show, for another typology, which streets change class against the own one. */
+  function changeLayers() {
+    const t = typo();
+    if (!t || !t.compare || !ownTypo()) return [];
+    const by = t.kind === "pooled" ? "the pooled typology" : `the ${typoShort(t)}`;
+    return ["transport", "context"].map((block) => ({
+      id: block === "transport" ? "T_change" : "C_change", group: "compare", kind: "change", block,
+      label: `${block === "transport" ? "Transport" : "Context"} class: own vs ${typoShort(t).toLowerCase() === "pooled" ? "pooled" : typoShort(t)}`,
+      short: block === "transport" ? "Transport class" : "Context class",
+      note: `Grey: the street lands where most streets of its own class land under ${by}. Dark: it lands in another class.`
+        + (mergedClasses(block, t).size ? " Light: its class merges with a larger one, so the distinction is lost." : ""),
+    }));
+  }
+  /** Own class -> the class of typology t where most of its streets land. */
+  function classMap(block, t = typo()) {
+    const cw = t.compare[block].crosswalk;
+    const m = new Map();
+    cw.rows.forEach((r, i) => {
+      const counts = cw.counts[i];
+      m.set(r, cw.cols[counts.indexOf(Math.max(...counts))]);
+    });
+    return m;
+  }
+  /** MapLibre pieces of a change layer: own class, new class, whether both exist, whether it moved. */
+  /** Own classes that land, with most of their streets, in a class that a larger own class leads. */
+  function mergedClasses(block, t = typo()) {
+    const cw = t.compare[block].crosswalk, map = classMap(block, t);
+    const lead = new Map();  // class of t -> own class bringing it most streets
+    cw.rows.forEach((r, i) => {
+      const to = map.get(r), n = cw.counts[i][cw.cols.indexOf(to)];
+      if (!lead.has(to) || n > lead.get(to)[1]) lead.set(to, [r, n]);
+    });
+    return new Map(cw.rows.filter((r) => lead.get(map.get(r))[0] !== r).map((r) => [r, lead.get(map.get(r))[0]]));
+  }
+  function changeExpr(block) {
+    const col = blockCol(block);
+    const own = num(lab(col, ownTypo())), now = num(lab(col));
+    const expected = ["match", own, ...[...classMap(block)].flat(), -99];
+    const valid = ["all", [">=", own, 0], [">=", now, 0]];
+    const merged = [...mergedClasses(block).keys()];
+    const isMerged = merged.length ? ["match", own, merged, true, false] : false;
+    const landed = ["all", valid, ["==", now, expected]];
+    return { own, now, valid, changed: ["all", valid, ["!=", now, expected]],
+             merged: ["all", landed, isMerged], same: ["all", landed, ["!", isMerged]] };
+  }
+  const clusterColors = (block, t = typo()) => {
+    const list = clusterList(block, t).filter((c) => c.id >= 0);
     const colors = sample(block === "transport" ? BLUE_ORDINAL : ORANGE_ORDINAL, list.length);
     const map = new Map(list.map((c, i) => [c.id, colors[i]]));
     map.set(-1, COL.cNull);
     return map;
   };
-  const transportWidths = () => {
-    const list = clusterList("transport").filter((c) => c.id >= 0);
+  const transportWidths = (t = typo()) => {
+    const list = clusterList("transport", t).filter((c) => c.id >= 0);
     const k = list.length;
     return new Map(list.map((c, i) => [c.id, k > 1 ? 0.7 + (1.7 * i) / (k - 1) : 1]));
   };
@@ -107,16 +168,45 @@
       });
     }
     if (layer.kind === "cluster") {
-      const col = layer.block === "transport" ? "T_cluster" : "C_cluster";
+      const col = lab(blockCol(layer.block));
       const colors = clusterColors(layer.block);
       return clusterList(layer.block).map((c) => ({ key: c.id, label: c.name, color: colors.get(c.id), count: c.count,
                                                      profile: c.profile,
                                                      test: (p) => p[col] === c.id }));
     }
+    if (layer.kind === "change") {
+      const t = typo(), own = ownTypo(), col = blockCol(layer.block);
+      const map = classMap(layer.block), cw = t.compare[layer.block].crosswalk;
+      const ownOf = (p) => p[lab(col, own)], nowOf = (p) => p[lab(col, t)];
+      const valid = (p) => ownOf(p) != null && nowOf(p) != null && ownOf(p) >= 0 && nowOf(p) >= 0;
+      const merged = mergedClasses(layer.block, t);
+      const same = { key: "same", label: "Same class", color: COL.confident, count: 0,
+                     test: (p) => valid(p) && map.get(ownOf(p)) === nowOf(p) && !merged.has(ownOf(p)) };
+      const merges = [], moves = [];
+      cw.rows.forEach((r, i) => cw.cols.forEach((c, j) => {
+        const n = cw.counts[i][j];
+        if (!n) return;
+        const [oc, on] = splitName(clusterName(layer.block, r, own));
+        const [nc, nn] = splitName(clusterName(layer.block, c, t));
+        const test = (p) => valid(p) && ownOf(p) === r && nowOf(p) === c;
+        if (map.get(r) !== c) {
+          moves.push({ key: `${r}>${c}`, label: `${oc} → ${nc}`, profile: `${on} → ${nn}`,
+                       color: CHANGED[layer.block], count: n, test });
+        } else if (merged.has(r)) {
+          const lc = splitName(clusterName(layer.block, merged.get(r), own))[0];
+          merges.push({ key: `${r}>${c}`, label: `${oc} merges with ${lc}`, profile: `${on} → ${nn}`,
+                        color: MERGED[layer.block], count: n, test, kind: "merge" });
+        } else {
+          same.count += n;
+        }
+      }));
+      const byCount = (a, b) => b.count - a.count;
+      return [same, ...merges.sort(byCount), ...moves.sort(byCount)];
+    }
     if (layer.kind === "borderline") {
       return [
-        { key: true, label: "Borderline", color: COL.borderline, test: (p) => p.borderline === true },
-        { key: false, label: "Confident", color: COL.confident, test: (p) => p.borderline === false },
+        { key: true, label: "Borderline", color: COL.borderline, test: (p) => p[lab("borderline")] === true },
+        { key: false, label: "Confident", color: COL.confident, test: (p) => p[lab("borderline")] === false },
       ];
     }
     return [];
@@ -135,12 +225,18 @@
     if (!iso) return null;
     if (layer.kind === "morphotype") {
       const parts = [];
-      if (iso.T != null) parts.push(["==", num("T_cluster"), iso.T]);
-      if (iso.C != null) parts.push(["==", num("C_cluster"), iso.C]);
+      if (iso.T != null) parts.push(["==", num(lab("T_cluster")), iso.T]);
+      if (iso.C != null) parts.push(["==", num(lab("C_cluster")), iso.C]);
       return ["all", ...parts];
     }
-    if (layer.kind === "cluster") return ["==", num(layer.block === "transport" ? "T_cluster" : "C_cluster"), iso.key];
-    if (layer.kind === "borderline") return ["==", ["get", "borderline"], iso.key];
+    if (layer.kind === "cluster") return ["==", num(lab(blockCol(layer.block))), iso.key];
+    if (layer.kind === "borderline") return ["==", ["get", lab("borderline")], iso.key];
+    if (layer.kind === "change") {
+      const x = changeExpr(layer.block);
+      if (iso.key === "same") return x.same;
+      const [o, n] = iso.key.split(">").map(Number);
+      return ["all", ["==", x.own, o], ["==", x.now, n]];
+    }
     if (layer.kind === "numeric") {
       const e = legendEntries(layer)[iso.key];
       const v = ["get", layer.id];
@@ -161,7 +257,7 @@
       width = zoomWidth(["case", ["==", ["typeof", v], "number"], 1, 0.6]);
       sort = num(layer.id);
     } else if (layer.kind === "cluster") {
-      const col = layer.block === "transport" ? "T_cluster" : "C_cluster";
+      const col = lab(blockCol(layer.block));
       const colors = clusterColors(layer.block);
       color = ["match", num(col), ...[...colors].flat(), COL.none];
       width = zoomWidth(["case", ["has", col], 1, 0.6]);
@@ -169,13 +265,19 @@
     } else if (layer.kind === "morphotype") {
       const colors = clusterColors("context");
       const widths = transportWidths();
-      color = ["match", num("C_cluster"), ...[...colors].flat(), COL.none];
-      width = zoomWidth(["match", num("T_cluster"), ...[...widths].flat(), 0.5]);
-      sort = num("T_cluster");
+      color = ["match", num(lab("C_cluster")), ...[...colors].flat(), COL.none];
+      width = zoomWidth(["match", num(lab("T_cluster")), ...[...widths].flat(), 0.5]);
+      sort = num(lab("T_cluster"));
+    } else if (layer.kind === "change") {
+      const x = changeExpr(layer.block);
+      color = ["case", ["!", x.valid], COL.none, x.changed, CHANGED[layer.block], x.merged, MERGED[layer.block], COL.confident];
+      width = zoomWidth(["case", x.changed, 1.7, x.merged, 1.3, 0.7]);
+      sort = ["case", x.changed, 2, x.merged, 1, 0];
     } else {
-      color = ["case", ["==", ["get", "borderline"], true], COL.borderline, ["has", "borderline"], COL.confident, COL.none];
-      width = zoomWidth(["case", ["==", ["get", "borderline"], true], 1.3, 0.8]);
-      sort = ["case", ["==", ["get", "borderline"], true], 1, 0];
+      const b = lab("borderline");
+      color = ["case", ["==", ["get", b], true], COL.borderline, ["has", b], COL.confident, COL.none];
+      width = zoomWidth(["case", ["==", ["get", b], true], 1.3, 0.8]);
+      sort = ["case", ["==", ["get", b], true], 1, 0];
     }
     const iso = isolateExpr(layer);
     let opacity = 0.95;
@@ -317,8 +419,8 @@
     const i = name.indexOf(" · ");
     return i < 0 ? [name, ""] : [name.slice(0, i), name.slice(i + 3)];
   };
-  const clusterName = (block, id) => {
-    const c = clusterList(block).find((x) => x.id === id);
+  const clusterName = (block, id, t = typo()) => {
+    const c = clusterList(block, t).find((x) => x.id === id);
     return c ? c.name : "—";
   };
 
@@ -327,11 +429,19 @@
     if (!layer) return "";
     if (layer.kind === "numeric") return `${layer.short}: ${fmt(p[layer.id], layer.format)}`;
     if (layer.kind === "cluster") {
-      const col = layer.block === "transport" ? "T_cluster" : "C_cluster";
+      const col = lab(blockCol(layer.block));
       return p[col] == null ? "not classified" : clusterName(layer.block, p[col]);
     }
-    if (layer.kind === "borderline") return p.borderline == null ? "not classified" : p.borderline ? "borderline" : "confident";
-    return p.morphotype || "not classified";
+    if (layer.kind === "change") {
+      const col = blockCol(layer.block), o = p[lab(col, ownTypo())], n = p[lab(col)];
+      if (o == null || n == null || o < 0 || n < 0) return "not classified";
+      const own = clusterName(layer.block, o, ownTypo()), now = clusterName(layer.block, n);
+      if (classMap(layer.block).get(o) !== n) return `${own} → ${now}`;
+      return mergedClasses(layer.block).has(o) ? `merged: ${own} → ${now}` : `same class: ${now}`;
+    }
+    const b = p[lab("borderline")];
+    if (layer.kind === "borderline") return b == null ? "not classified" : b ? "borderline" : "confident";
+    return p[lab("morphotype")] || "not classified";
   }
 
   // ── Sidebar: cities ────────────────────────────────────────────────────────
@@ -358,6 +468,40 @@
     }
   }
 
+  // ── Sidebar: typology ──────────────────────────────────────────────────────
+
+  const TYPO_SHORT = { own: "Own", pooled: "Pooled" };
+  function typoShort(t) {
+    return t.kind === "model" ? `${t.trained_on_labels.join(" + ")} model` : TYPO_SHORT[t.kind];
+  }
+  function typoDescription(t) {
+    const c = city();
+    if (t.kind === "own") return `Classes found in ${c.label} itself: what is typical for this city.`;
+    if (t.kind === "model") {
+      return `${c.label} measured by ${t.trained_on_labels.join(" + ")}'s classes: does the typology carry over?`;
+    }
+    return `One set of classes fitted on ${t.trained_on_labels.join(" + ")} together, the same in every city.`;
+  }
+
+  function renderTypologies() {
+    const block = $("typology-block");
+    const c = city();
+    block.hidden = !c || c.typologies.length < 2;
+    if (block.hidden) return;
+    const box = $("typologies");
+    box.replaceChildren();
+    for (const t of c.typologies) {
+      const b = el("button", "seg-btn", typoShort(t));
+      b.type = "button";
+      b.setAttribute("role", "radio");
+      b.setAttribute("aria-checked", String(t === typo()));
+      b.title = t.label;
+      b.addEventListener("click", () => selectTypology(t.id));
+      box.append(b);
+    }
+    $("typology-note").textContent = typoDescription(typo());
+  }
+
   // ── Sidebar: layers ────────────────────────────────────────────────────────
 
   function renderLayers() {
@@ -366,21 +510,19 @@
     const c = city();
     if (!c) return;
     for (const g of GROUPS) {
-      const layers = c.layers.filter((l) => l.group === g.id);
+      const layers = allLayers().filter((l) => l.group === g.id);
       if (!layers.length) continue;
-      const sec = el("section", "layer-group");
-      const title = el("h2", "block-title");
-      if (g.ramp) {
-        const bar = el("span", "swatch-bar");
-        bar.style.background = `linear-gradient(90deg, ${g.ramp[0]}, ${g.ramp[g.ramp.length - 1]})`;
-        title.append(bar);
-      }
-      title.append(g.title);
-      sec.append(title);
+      const sec = el("section", `layer-group grp-${g.id}`);
+      sec.append(el("h2", "block-title", g.title));
 
       for (let i = 0; i < layers.length; i++) {
         const l = layers[i];
-        if (l.chip) {
+        if (l.family === "fn") {  // floor-area shares: a sub-heading and one row per function
+          const fam = layers.filter((x) => x.family === "fn");
+          i += fam.length - 1;
+          sec.append(el("div", "subhead", l.family_label));
+          for (const x of fam) sec.append(layerRow(x, x.chip.charAt(0).toUpperCase() + x.chip.slice(1), "indent"));
+        } else if (l.chip) {
           const fam = layers.filter((x) => x.family === l.family && x.chip);
           i += fam.length - 1;
           const row = el("div", "family");
@@ -400,18 +542,22 @@
           row.append(dot, lbl, chips);
           sec.append(row);
         } else {
-          const b = el("button", "layer-row");
-          b.type = "button";
-          b.setAttribute("aria-pressed", String(l.id === state.layerId));
-          b.title = l.label;
-          if (l.kind === "numeric") b.append(el("span", "model-dot" + (l.in_model ? "" : " off")));
-          b.append(el("span", "lbl", l.short || l.label));
-          b.addEventListener("click", () => selectLayer(l.id));
-          sec.append(b);
+          sec.append(layerRow(l, l.short || l.label));
         }
       }
       nav.append(sec);
     }
+  }
+
+  function layerRow(l, text, cls = "") {
+    const b = el("button", `layer-row ${cls}`.trim());
+    b.type = "button";
+    b.setAttribute("aria-pressed", String(l.id === state.layerId));
+    b.title = l.kind === "numeric" ? l.label + (l.in_model ? " — used in clustering" : " — not used in clustering") : l.label;
+    if (l.kind === "numeric") b.append(el("span", "model-dot" + (l.in_model ? "" : " off")));
+    b.append(el("span", "lbl", text));
+    b.addEventListener("click", () => selectLayer(l.id));
+    return b;
   }
 
   // ── Right panel: legend ────────────────────────────────────────────────────
@@ -435,14 +581,28 @@
     }
     $("legend-title").textContent = layer.label;
     const note = $("legend-note");
+    note.className = `legend-note grp-${layer.group}`;
     note.replaceChildren(layer.note || "");
+    if (layer.group === "morphotypes" && typo().kind !== "own") {
+      note.append(el("span", "typo-badge", typo().kind === "pooled" ? "Classes of the pooled typology."
+                                                                       : `Classes of the ${typoShort(typo())}.`));
+    }
     if (layer.kind === "numeric") {
       const badge = el("span", "badge" + (layer.in_model ? "" : " off"),
                        layer.in_model ? "Used in clustering" : layer.excluded_reason);
       note.append(badge);
     }
-    const order = orderNote(layer);
-    if (order) note.append(el("span", "order", order));
+    if (layer.kind === "change") {
+      const entries = legendEntries(layer);
+      const total = entries.reduce((n, e) => n + e.count, 0) || 1;
+      const sum = (pred) => entries.filter(pred).reduce((n, e) => n + e.count, 0);
+      const moved = sum((e) => e.key !== "same" && e.kind !== "merge"), merged = sum((e) => e.kind === "merge");
+      const stat = el("span", "change-stat");
+      stat.append(el("b", null, pct(moved / total)), " of the classified streets change class");
+      if (merged) stat.append(", ", el("b", null, pct(merged / total)), " lose their own class in a merge");
+      stat.append(" · ", term("agreement", "ari"), " ", el("b", null, typo().compare[layer.block].ari.toFixed(2)));
+      note.append(stat);
+    }
     if (layer.kind === "morphotype") return renderMatrix(box);
 
     const entries = legendEntries(layer);
@@ -455,10 +615,12 @@
       if (state.isolate && state.isolate.key !== e.key) item.classList.add("dim");
       const [code, rest] = layer.kind === "cluster" ? splitName(e.label) : [e.label, ""];
       const name = el("span", "name");
-      if (rest) name.append(el("span", "code", code), ` ${rest}`); else name.append(code);
+      if (rest) name.append(el("span", "code", code), ` ${rest}`);
+      else if (layer.kind === "change") name.append(el("span", "code", code));
+      else name.append(code);
       if (e.profile) name.append(el("span", "profile", e.profile));
       item.append(lineSwatch(e.color), name, el("span", "count", count.toLocaleString("en-US")));
-      item.title = "Show only this class";
+      item.title = layer.kind === "change" ? "Show only these streets" : "Show only this class";
       item.addEventListener("click", () => toggleIsolate({ key: e.key }));
       list.append(item);
     }
@@ -472,21 +634,13 @@
     box.append(list);
   }
 
-  function orderNote(layer) {
-    const ob = city().order_by || {};
-    const fmtOrder = (b) => (ob[b] ? `${b === "transport" ? "T" : "C"} classes are numbered by ${ob[b].label} (low → high)` : "");
-    if (layer.kind === "cluster") return fmtOrder(layer.block) + (ob[layer.block] ? "." : "");
-    if (layer.kind === "morphotype") return [fmtOrder("transport"), fmtOrder("context")].filter(Boolean).join("; ") + ".";
-    return "";
-  }
-
   function renderMatrix(box) {
-    const c = city();
     const tList = clusterList("transport").filter((x) => x.id >= 0);
     const cList = clusterList("context");
     const cColors = clusterColors("context");
     const widths = transportWidths();
-    const max = Math.max(1, ...Object.values(c.morphotypes).map((m) => m.count));
+    const morph = typo().morphotypes;
+    const max = Math.max(1, ...Object.values(morph).map((m) => m.count));
     const iso = state.isolate || {};
     const grid = el("div", "matrix");
     grid.style.gridTemplateColumns = `48px repeat(${cList.length}, minmax(0, 1fr))`;
@@ -516,7 +670,7 @@
       grid.append(h);
       for (const cc of cList) {
         const code = `T${t.id}-${cc.id < 0 ? "C_null" : `C${cc.id}`}`;
-        const m = c.morphotypes[code];
+        const m = morph[code];
         const cell = el("button", "cell", m ? m.count.toLocaleString("en-US") : "·");
         cell.type = "button";
         if (!m) {
@@ -525,7 +679,7 @@
         } else {
           const a = 0.12 + 0.88 * Math.sqrt(m.count / max);
           cell.style.background = rgba(cColors.get(cc.id), a);
-          cell.style.color = a > 0.6 && cc.id >= 1 ? "#fff" : "#0b0b0b";
+          cell.style.color = a > 0.6 && cc.id >= 2 ? "#fff" : "#0b0b0b";
           cell.title = `${code} · ${m.count} segments\n${m.name}`;
           cell.addEventListener("click", () => toggleIsolate({ T: t.id, C: cc.id }));
           cell.addEventListener("mouseenter", () => setCaption(code, m));
@@ -553,7 +707,7 @@
     if (!code && !cls && iso) {
       if (iso.T != null && iso.C != null) {
         code = `T${iso.T}-${iso.C < 0 ? "C_null" : `C${iso.C}`}`;
-        m = city().morphotypes[code];
+        m = typo().morphotypes[code];
       } else {
         cls = iso.T != null ? clusterList("transport").find((x) => x.id === iso.T)
                             : clusterList("context").find((x) => x.id === iso.C);
@@ -565,9 +719,6 @@
                  `${cls.count.toLocaleString("en-US")} segments` + (cls.profile ? ` · ${cls.profile}` : ""));
     } else if (code && m) {
       cap.append(el("b", null, `${code} · ${m.count.toLocaleString("en-US")} segments`), el("br"), m.name);
-    } else {
-      cap.textContent = "Rows: transport classes (line width). Columns: context classes (colour). "
-        + "Hover for names, click to isolate.";
     }
   }
 
@@ -593,20 +744,28 @@
     box.append(el("p", "seg-sub", sub.filter(Boolean).join(" · ")));
 
     const types = el("div", "seg-types");
-    if (p.T_cluster != null) {
-      const tw = transportWidths();
-      const row = el("div", "seg-type");
-      row.append(lineSwatch(clusterColors("transport").get(p.T_cluster), 1.5 * tw.get(p.T_cluster) + 1),
-                 el("span", null, clusterName("transport", p.T_cluster)), el("span", "conf", confidence(p.T_confidence)));
-      types.append(row);
+    const own = ownTypo();
+    const shown = own && own !== typo() ? [typo(), own] : [typo()];
+    for (const t of shown) {
+      if (shown.length > 1) types.append(el("p", "seg-typo", t === own ? "Own typology" : t.label));
+      const tc = p[lab("T_cluster", t)], cc = p[lab("C_cluster", t)];
+      if (tc != null) {
+        const row = el("div", "seg-type");
+        row.append(lineSwatch(clusterColors("transport", t).get(tc), 1.5 * transportWidths(t).get(tc) + 1),
+                   el("span", null, clusterName("transport", tc, t)), el("span", "conf", confidence(p[lab("T_confidence", t)])));
+        types.append(row);
+      }
+      if (cc != null) {
+        const row = el("div", "seg-type");
+        row.append(lineSwatch(clusterColors("context", t).get(cc)),
+                   el("span", null, clusterName("context", cc, t)), el("span", "conf", confidence(p[lab("C_confidence", t)])));
+        types.append(row);
+      }
+      if (tc == null) {
+        types.append(el("p", "placeholder", "Not classified (outside the clustered network)."));
+        break;
+      }
     }
-    if (p.C_cluster != null) {
-      const row = el("div", "seg-type");
-      row.append(lineSwatch(clusterColors("context").get(p.C_cluster)),
-                 el("span", null, clusterName("context", p.C_cluster)), el("span", "conf", confidence(p.C_confidence)));
-      types.append(row);
-    }
-    if (p.T_cluster == null) types.append(el("p", "placeholder", "Not classified (outside the clustered network)."));
     box.append(types);
 
     const dl = el("dl", "values");
@@ -618,7 +777,7 @@
         const dt = el("dt", null, l.chip ? `${l.family_label.split(" · ")[0]} ${l.family === "fn" ? l.chip : l.chip === "Rn" ? "Rn" : `${l.chip} m`}` : l.short);
         const dd = el("dd", null, fmt(p[l.id], l.format));
         if (p[`${l.id}_imputed`]) dd.append(el("span", "imp", " (default)"));
-        if (l.id === state.layerId) { dt.classList.add("active"); dd.classList.add("active"); }
+        if (l.id === state.layerId) { dt.classList.add("active", `grp-${g.id}`); dd.classList.add("active", `grp-${g.id}`); }
         dl.append(dt, dd);
       }
     }
@@ -633,10 +792,8 @@
     const dl = $("facts");
     dl.replaceChildren();
     if (!c) { $("facts-title").textContent = "City"; return; }
-    const s = c.stats;
-    const cityLabel = (id) => (MANIFEST.cities.find((x) => x.id === id) || { label: id }).label;
-    const typology = c.mode === "local" ? "own typology" : `shared typology: ${c.trained_on.map(cityLabel).join(" + ")}`;
-    $("facts-title").textContent = `${c.label} · ${typology}`;
+    const s = { ...c.stats, ...typo().stats };
+    $("facts-title").textContent = `${c.label} · ${typo().kind === "own" ? "own typology" : typo().label}`;
     const sil = (b) => (s.mean_silhouette[b] != null ? s.mean_silhouette[b].toFixed(2) : "—");
     const facts = [
       ["Segments classified", "classified", `${s.classified.toLocaleString("en-US")}`, ` / ${s.segments.toLocaleString("en-US")}`],
@@ -658,6 +815,22 @@
   }
 
   // ── Selection & URL ────────────────────────────────────────────────────────
+
+  function selectTypology(id) {
+    const wasOwn = typo().kind === "own";
+    state.typology = id;
+    state.isolate = null;
+    // the point of another typology is the difference: show it, unless a metric layer is open
+    if (typo().kind !== "own" && wasOwn && (!layerDef() || layerDef().kind !== "numeric")) state.layerId = "C_change";
+    if (!layerDef()) state.layerId = DEFAULT_LAYER;
+    paintMap();
+    renderTypologies();
+    renderLayers();
+    renderLegend();
+    renderDetails();
+    renderFacts();
+    writeHash();
+  }
 
   function selectLayer(id) {
     if (!layerDef(id)) id = DEFAULT_LAYER;
@@ -686,7 +859,10 @@
     const c = MANIFEST.cities.find((x) => x.id === id) || MANIFEST.cities[0];
     if (!c) return;
     const ticket = ++loading;
+    const kind = state.typologyKind || (typo() ? typo().kind : "own");  // keep own / model / pooled across cities
+    state.typologyKind = null;
     state.city = c.id;
+    state.typology = (c.typologies.find((t) => t.kind === kind) || c.typologies[0]).id;
     state.selected = state.hover = null;
     state.isolate = null;
     renderCities();
@@ -712,6 +888,7 @@
     if (!layerDef(state.layerId)) state.layerId = DEFAULT_LAYER;
     paintMap();
     setFilters();
+    renderTypologies();
     renderLayers();
     renderLegend();
     renderDetails();
@@ -728,14 +905,22 @@
 
   function readHash() {
     const h = new URLSearchParams(location.hash.slice(1));
-    return { city: h.get("city"), layer: h.get("layer") };
+    return { city: h.get("city"), layer: h.get("layer"), typology: h.get("typology") };
   }
   function writeHash() {
     if (!state.city) return;
-    history.replaceState(null, "", `#city=${encodeURIComponent(state.city)}&layer=${encodeURIComponent(state.layerId)}`);
+    const t = typo();
+    const extra = t && t.kind !== "own" ? `&typology=${t.kind}` : "";
+    history.replaceState(null, "", `#city=${encodeURIComponent(state.city)}&layer=${encodeURIComponent(state.layerId)}${extra}`);
   }
 
   // ── Start ──────────────────────────────────────────────────────────────────
+
+  // The author's byline and the Irkutsk-Wrocław findings describe that study only: with other runs they go.
+  const CASE_STUDY = ["irkutsk", "wroclaw"];
+  if (!CASE_STUDY.every((id) => MANIFEST.cities.some((c) => c.id === id))) {
+    document.querySelectorAll("[data-case-study]").forEach((n) => n.remove());
+  }
 
   $("legend-reset").addEventListener("click", () => toggleIsolate(state.isolate));
   const repo = document.getElementById("repo-link");
@@ -747,7 +932,7 @@
     a.rel = "noopener";
     $("about-repo").append(" (", a, ")");
   } else {
-    repo.remove();
+    repo.closest("footer").remove();
   }
 
   // About dialog: "?" opens it; the close button, Esc or a click outside closes it; #about opens it directly.
@@ -793,6 +978,7 @@
 
   const initial = readHash();
   if (initial.layer) state.layerId = initial.layer;
+  if (initial.typology) state.typologyKind = initial.typology;
   renderCities();
   renderLegend();
   renderFacts();

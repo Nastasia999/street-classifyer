@@ -1,234 +1,659 @@
 window.SM_MANIFEST = {
- "generated": "2026-10-13T21:50:07+00:00",
+ "generated": "2026-10-14T08:49:22+00:00",
  "output_root": "outputs",
  "cities": [
   {
    "id": "irkutsk",
    "label": "Irkutsk",
    "run": "irkutsk",
-   "mode": "local",
+   "mode": "own",
    "trained_on": [
     "irkutsk"
    ],
    "file": "data/cities/irkutsk.js",
-   "version": 1791926913,
+   "version": 1791963885,
    "bounds": [
-    104.0667,
+    104.07191,
     52.20975,
     104.44439,
-    52.40725
+    52.40524
    ],
    "stats": {
-    "segments": 4385,
-    "classified": 4186,
-    "borderline": 750,
-    "k": {
-     "transport": 4,
-     "context": 6
-    },
-    "mean_silhouette": {
-     "transport": 0.4134,
-     "context": 0.5859
-    },
-    "lanes_imputed_share": 0.582,
-    "maxspeed_imputed_share": 0.605,
+    "segments": 4741,
+    "lanes_imputed_share": 0.605,
+    "maxspeed_imputed_share": 0.626,
     "unknown_function_share": 0.076
    },
-   "clusters": {
-    "transport": [
-     {
-      "id": 0,
-      "name": "T0 · Local access street",
-      "count": 711,
-      "profile": "low through-movement Rn, low integration R800 m"
+   "typologies": [
+    {
+     "id": "own",
+     "key": "",
+     "kind": "own",
+     "label": "Own typology",
+     "run": "irkutsk",
+     "trained_on": [
+      "irkutsk"
+     ],
+     "trained_on_labels": [
+      "Irkutsk"
+     ],
+     "stats": {
+      "classified": 4528,
+      "borderline": 883,
+      "k": {
+       "transport": 4,
+       "context": 4
+      },
+      "mean_silhouette": {
+       "transport": 0.412,
+       "context": 0.4835
+      }
      },
-     {
-      "id": 1,
-      "name": "T1 · Ordinary street",
-      "count": 2537,
-      "profile": "close to the city median on every feature"
+     "clusters": {
+      "transport": [
+       {
+        "id": 1,
+        "name": "T1 · Local access street",
+        "count": 813,
+        "profile": "low through-movement Rn, low integration R800 m"
+       },
+       {
+        "id": 2,
+        "name": "T2 · Ordinary street",
+        "count": 2730,
+        "profile": "close to the city median on every feature"
+       },
+       {
+        "id": 3,
+        "name": "T3 · Public transport street with stops",
+        "count": 297,
+        "profile": "high PT stops, high PT routes"
+       },
+       {
+        "id": 4,
+        "name": "T4 · Public transport arterial",
+        "count": 688,
+        "profile": "high PT routes, high lanes"
+       }
+      ],
+      "context": [
+       {
+        "id": 1,
+        "name": "C1 · Residential street without services",
+        "count": 2688,
+        "profile": "close to the city median on every feature"
+       },
+       {
+        "id": 2,
+        "name": "C2 · Green street with sparse buildings",
+        "count": 617,
+        "profile": "high greenery, low residential"
+       },
+       {
+        "id": 3,
+        "name": "C3 · Institutional street (schools, health, campuses)",
+        "count": 185,
+        "profile": "high social, low residential"
+       },
+       {
+        "id": 4,
+        "name": "C4 · Commercial street",
+        "count": 769,
+        "profile": "high commercial, high organisations"
+       },
+       {
+        "id": -1,
+        "name": "C_null · no reliable building data",
+        "count": 269
+       }
+      ]
      },
-     {
-      "id": 2,
-      "name": "T2 · Public transport street with stops",
-      "count": 291,
-      "profile": "high PT stops, high PT routes"
-     },
-     {
-      "id": 3,
-      "name": "T3 · Public transport arterial",
-      "count": 647,
-      "profile": "high PT routes, high lanes"
+     "morphotypes": {
+      "T1-C1": {
+       "count": 565,
+       "name": "Local access street | Residential street without services"
+      },
+      "T1-C2": {
+       "count": 91,
+       "name": "Local access street | Green street with sparse buildings"
+      },
+      "T1-C3": {
+       "count": 27,
+       "name": "Local access street | Institutional street (schools, health, campuses)"
+      },
+      "T1-C4": {
+       "count": 70,
+       "name": "Local access street | Commercial street"
+      },
+      "T1-C_null": {
+       "count": 60,
+       "name": "Local access street | no reliable building data"
+      },
+      "T2-C1": {
+       "count": 1847,
+       "name": "Ordinary street | Residential street without services"
+      },
+      "T2-C2": {
+       "count": 330,
+       "name": "Ordinary street | Green street with sparse buildings"
+      },
+      "T2-C3": {
+       "count": 87,
+       "name": "Ordinary street | Institutional street (schools, health, campuses)"
+      },
+      "T2-C4": {
+       "count": 325,
+       "name": "Ordinary street | Commercial street"
+      },
+      "T2-C_null": {
+       "count": 141,
+       "name": "Ordinary street | no reliable building data"
+      },
+      "T3-C1": {
+       "count": 105,
+       "name": "Public transport street with stops | Residential street without services"
+      },
+      "T3-C2": {
+       "count": 32,
+       "name": "Public transport street with stops | Green street with sparse buildings"
+      },
+      "T3-C3": {
+       "count": 23,
+       "name": "Public transport street with stops | Institutional street (schools, health, campuses)"
+      },
+      "T3-C4": {
+       "count": 124,
+       "name": "Public transport street with stops | Commercial street"
+      },
+      "T3-C_null": {
+       "count": 13,
+       "name": "Public transport street with stops | no reliable building data"
+      },
+      "T4-C1": {
+       "count": 171,
+       "name": "Public transport arterial | Residential street without services"
+      },
+      "T4-C2": {
+       "count": 164,
+       "name": "Public transport arterial | Green street with sparse buildings"
+      },
+      "T4-C3": {
+       "count": 48,
+       "name": "Public transport arterial | Institutional street (schools, health, campuses)"
+      },
+      "T4-C4": {
+       "count": 250,
+       "name": "Public transport arterial | Commercial street"
+      },
+      "T4-C_null": {
+       "count": 55,
+       "name": "Public transport arterial | no reliable building data"
+      }
      }
-    ],
-    "context": [
-     {
-      "id": 0,
-      "name": "C0 · Residential street without services",
-      "count": 2322,
-      "profile": "close to the city median on every feature"
+    },
+    {
+     "id": "model-wroclaw",
+     "key": "@1",
+     "kind": "model",
+     "label": "Wrocław model",
+     "run": "applied_wroclaw",
+     "trained_on": [
+      "wroclaw"
+     ],
+     "trained_on_labels": [
+      "Wrocław"
+     ],
+     "stats": {
+      "classified": 4528,
+      "borderline": 889,
+      "k": {
+       "transport": 4,
+       "context": 4
+      },
+      "mean_silhouette": {
+       "transport": 0.4115,
+       "context": 0.5337
+      }
      },
-     {
-      "id": 1,
-      "name": "C1 · Commercial roadside with set-back buildings",
-      "count": 180,
-      "profile": "high commercial, high greenery"
+     "clusters": {
+      "transport": [
+       {
+        "id": 1,
+        "name": "T1 · Local access street",
+        "count": 769,
+        "profile": "low through-movement Rn, low speed limit"
+       },
+       {
+        "id": 2,
+        "name": "T2 · Ordinary street",
+        "count": 2681,
+        "profile": "low speed limit"
+       },
+       {
+        "id": 3,
+        "name": "T3 · Public transport street with stops",
+        "count": 300,
+        "profile": "high PT stops, high PT routes"
+       },
+       {
+        "id": 4,
+        "name": "T4 · Public transport arterial",
+        "count": 778,
+        "profile": "high PT routes, high lanes"
+       }
+      ],
+      "context": [
+       {
+        "id": 1,
+        "name": "C1 · Dense residential street, little greenery",
+        "count": 3053,
+        "profile": "low greenery"
+       },
+       {
+        "id": 2,
+        "name": "C2 · Green residential street",
+        "count": 689,
+        "profile": "close to the city median on every feature"
+       },
+       {
+        "id": 3,
+        "name": "C3 · Institutional street (schools, health, campuses)",
+        "count": 148,
+        "profile": "high social, low residential"
+       },
+       {
+        "id": 4,
+        "name": "C4 · Commercial street",
+        "count": 369,
+        "profile": "high commercial, high organisations"
+       },
+       {
+        "id": -1,
+        "name": "C_null · no reliable building data",
+        "count": 269
+       }
+      ]
      },
-     {
-      "id": 2,
-      "name": "C2 · Green street with sparse buildings",
-      "count": 570,
-      "profile": "high greenery, low residential"
+     "morphotypes": {
+      "T1-C1": {
+       "count": 569,
+       "name": "Local access street | Dense residential street, little greenery"
+      },
+      "T1-C2": {
+       "count": 95,
+       "name": "Local access street | Green residential street"
+      },
+      "T1-C3": {
+       "count": 18,
+       "name": "Local access street | Institutional street (schools, health, campuses)"
+      },
+      "T1-C4": {
+       "count": 29,
+       "name": "Local access street | Commercial street"
+      },
+      "T1-C_null": {
+       "count": 58,
+       "name": "Local access street | no reliable building data"
+      },
+      "T2-C1": {
+       "count": 2032,
+       "name": "Ordinary street | Dense residential street, little greenery"
+      },
+      "T2-C2": {
+       "count": 337,
+       "name": "Ordinary street | Green residential street"
+      },
+      "T2-C3": {
+       "count": 60,
+       "name": "Ordinary street | Institutional street (schools, health, campuses)"
+      },
+      "T2-C4": {
+       "count": 116,
+       "name": "Ordinary street | Commercial street"
+      },
+      "T2-C_null": {
+       "count": 136,
+       "name": "Ordinary street | no reliable building data"
+      },
+      "T3-C1": {
+       "count": 163,
+       "name": "Public transport street with stops | Dense residential street, little greenery"
+      },
+      "T3-C2": {
+       "count": 44,
+       "name": "Public transport street with stops | Green residential street"
+      },
+      "T3-C3": {
+       "count": 20,
+       "name": "Public transport street with stops | Institutional street (schools, health, campuses)"
+      },
+      "T3-C4": {
+       "count": 59,
+       "name": "Public transport street with stops | Commercial street"
+      },
+      "T3-C_null": {
+       "count": 14,
+       "name": "Public transport street with stops | no reliable building data"
+      },
+      "T4-C1": {
+       "count": 289,
+       "name": "Public transport arterial | Dense residential street, little greenery"
+      },
+      "T4-C2": {
+       "count": 213,
+       "name": "Public transport arterial | Green residential street"
+      },
+      "T4-C3": {
+       "count": 50,
+       "name": "Public transport arterial | Institutional street (schools, health, campuses)"
+      },
+      "T4-C4": {
+       "count": 165,
+       "name": "Public transport arterial | Commercial street"
+      },
+      "T4-C_null": {
+       "count": 61,
+       "name": "Public transport arterial | no reliable building data"
+      }
      },
-     {
-      "id": 3,
-      "name": "C3 · Residential street with services",
-      "count": 309,
-      "profile": "high organisations, high commercial, high social"
-     },
-     {
-      "id": 4,
-      "name": "C4 · Green mixed-use street",
-      "count": 307,
-      "profile": "high greenery, high organisations"
-     },
-     {
-      "id": 5,
-      "name": "C5 · Commercial high street",
-      "count": 262,
-      "profile": "high commercial, high organisations, low residential"
-     },
-     {
-      "id": -1,
-      "name": "C_null · no reliable building data",
-      "count": 236
+     "compare": {
+      "transport": {
+       "ari": 0.889,
+       "crosswalk": {
+        "rows": [
+         1,
+         2,
+         3,
+         4
+        ],
+        "cols": [
+         1,
+         2,
+         3,
+         4
+        ],
+        "counts": [
+         [
+          757,
+          56,
+          0,
+          0
+         ],
+         [
+          10,
+          2624,
+          2,
+          94
+         ],
+         [
+          2,
+          1,
+          291,
+          3
+         ],
+         [
+          0,
+          0,
+          7,
+          681
+         ]
+        ]
+       }
+      },
+      "context": {
+       "ari": 0.729,
+       "crosswalk": {
+        "rows": [
+         1,
+         2,
+         3,
+         4
+        ],
+        "cols": [
+         1,
+         2,
+         3,
+         4
+        ],
+        "counts": [
+         [
+          2688,
+          0,
+          0,
+          0
+         ],
+         [
+          1,
+          615,
+          1,
+          0
+         ],
+         [
+          67,
+          1,
+          117,
+          0
+         ],
+         [
+          297,
+          73,
+          30,
+          369
+         ]
+        ]
+       }
+      },
+      "morphotype": {
+       "ari": 0.813
+      }
      }
-    ]
-   },
-   "order_by": {
-    "transport": {
-     "id": "ss_nach_n",
-     "label": "through-movement Rn"
     },
-    "context": {
-     "id": "poi_per_100m",
-     "label": "organisations"
+    {
+     "id": "pooled-irkutsk_wroclaw",
+     "key": "@2",
+     "kind": "pooled",
+     "label": "Pooled: Irkutsk + Wrocław",
+     "run": "irkutsk_wroclaw",
+     "trained_on": [
+      "irkutsk",
+      "wroclaw"
+     ],
+     "trained_on_labels": [
+      "Irkutsk",
+      "Wrocław"
+     ],
+     "stats": {
+      "classified": 4528,
+      "borderline": 788,
+      "k": {
+       "transport": 4,
+       "context": 2
+      },
+      "mean_silhouette": {
+       "transport": 0.3598,
+       "context": 0.5105
+      }
+     },
+     "clusters": {
+      "transport": [
+       {
+        "id": 1,
+        "name": "T1 · low through-movement Rn, low integration R800 m",
+        "count": 793,
+        "profile": null
+       },
+       {
+        "id": 2,
+        "name": "T2 · average profile",
+        "count": 2742,
+        "profile": "close to the city median on every feature"
+       },
+       {
+        "id": 3,
+        "name": "T3 · high PT stops, high PT routes",
+        "count": 291,
+        "profile": null
+       },
+       {
+        "id": 4,
+        "name": "T4 · high PT routes, high lanes",
+        "count": 702,
+        "profile": null
+       }
+      ],
+      "context": [
+       {
+        "id": 1,
+        "name": "C1 · average profile",
+        "count": 3659,
+        "profile": "close to the city median on every feature"
+       },
+       {
+        "id": 2,
+        "name": "C2 · high commercial, high organisations",
+        "count": 600,
+        "profile": null
+       },
+       {
+        "id": -1,
+        "name": "C_null · no reliable building data",
+        "count": 269
+       }
+      ]
+     },
+     "morphotypes": {
+      "T1-C1": {
+       "count": 685,
+       "name": "low through-movement Rn, low integration R800 m | average profile"
+      },
+      "T1-C2": {
+       "count": 48,
+       "name": "low through-movement Rn, low integration R800 m | high commercial, high organisations"
+      },
+      "T1-C_null": {
+       "count": 60,
+       "name": "low through-movement Rn, low integration R800 m | no reliable building data"
+      },
+      "T2-C1": {
+       "count": 2363,
+       "name": "average profile | average profile"
+      },
+      "T2-C2": {
+       "count": 239,
+       "name": "average profile | high commercial, high organisations"
+      },
+      "T2-C_null": {
+       "count": 140,
+       "name": "average profile | no reliable building data"
+      },
+      "T3-C1": {
+       "count": 175,
+       "name": "high PT stops, high PT routes | average profile"
+      },
+      "T3-C2": {
+       "count": 103,
+       "name": "high PT stops, high PT routes | high commercial, high organisations"
+      },
+      "T3-C_null": {
+       "count": 13,
+       "name": "high PT stops, high PT routes | no reliable building data"
+      },
+      "T4-C1": {
+       "count": 436,
+       "name": "high PT routes, high lanes | average profile"
+      },
+      "T4-C2": {
+       "count": 210,
+       "name": "high PT routes, high lanes | high commercial, high organisations"
+      },
+      "T4-C_null": {
+       "count": 56,
+       "name": "high PT routes, high lanes | no reliable building data"
+      }
+     },
+     "compare": {
+      "transport": {
+       "ari": 0.965,
+       "crosswalk": {
+        "rows": [
+         1,
+         2,
+         3,
+         4
+        ],
+        "cols": [
+         1,
+         2,
+         3,
+         4
+        ],
+        "counts": [
+         [
+          786,
+          27,
+          0,
+          0
+         ],
+         [
+          6,
+          2711,
+          0,
+          13
+         ],
+         [
+          1,
+          3,
+          291,
+          2
+         ],
+         [
+          0,
+          1,
+          0,
+          687
+         ]
+        ]
+       }
+      },
+      "context": {
+       "ari": 0.376,
+       "crosswalk": {
+        "rows": [
+         1,
+         2,
+         3,
+         4
+        ],
+        "cols": [
+         1,
+         2
+        ],
+        "counts": [
+         [
+          2688,
+          0
+         ],
+         [
+          617,
+          0
+         ],
+         [
+          182,
+          3
+         ],
+         [
+          172,
+          597
+         ]
+        ]
+       }
+      },
+      "morphotype": {
+       "ari": 0.686
+      }
+     }
     }
-   },
-   "morphotypes": {
-    "T0-C0": {
-     "count": 458,
-     "name": "Local access street | Residential street without services"
-    },
-    "T0-C1": {
-     "count": 15,
-     "name": "Local access street | Commercial roadside with set-back buildings"
-    },
-    "T0-C2": {
-     "count": 93,
-     "name": "Local access street | Green street with sparse buildings"
-    },
-    "T0-C3": {
-     "count": 41,
-     "name": "Local access street | Residential street with services"
-    },
-    "T0-C4": {
-     "count": 30,
-     "name": "Local access street | Green mixed-use street"
-    },
-    "T0-C5": {
-     "count": 22,
-     "name": "Local access street | Commercial high street"
-    },
-    "T0-C_null": {
-     "count": 52,
-     "name": "Local access street | no reliable building data"
-    },
-    "T1-C0": {
-     "count": 1633,
-     "name": "Ordinary street | Residential street without services"
-    },
-    "T1-C1": {
-     "count": 72,
-     "name": "Ordinary street | Commercial roadside with set-back buildings"
-    },
-    "T1-C2": {
-     "count": 291,
-     "name": "Ordinary street | Green street with sparse buildings"
-    },
-    "T1-C3": {
-     "count": 172,
-     "name": "Ordinary street | Residential street with services"
-    },
-    "T1-C4": {
-     "count": 138,
-     "name": "Ordinary street | Green mixed-use street"
-    },
-    "T1-C5": {
-     "count": 108,
-     "name": "Ordinary street | Commercial high street"
-    },
-    "T1-C_null": {
-     "count": 123,
-     "name": "Ordinary street | no reliable building data"
-    },
-    "T2-C0": {
-     "count": 86,
-     "name": "Public transport street with stops | Residential street without services"
-    },
-    "T2-C1": {
-     "count": 20,
-     "name": "Public transport street with stops | Commercial roadside with set-back buildings"
-    },
-    "T2-C2": {
-     "count": 29,
-     "name": "Public transport street with stops | Green street with sparse buildings"
-    },
-    "T2-C3": {
-     "count": 44,
-     "name": "Public transport street with stops | Residential street with services"
-    },
-    "T2-C4": {
-     "count": 53,
-     "name": "Public transport street with stops | Green mixed-use street"
-    },
-    "T2-C5": {
-     "count": 48,
-     "name": "Public transport street with stops | Commercial high street"
-    },
-    "T2-C_null": {
-     "count": 11,
-     "name": "Public transport street with stops | no reliable building data"
-    },
-    "T3-C0": {
-     "count": 145,
-     "name": "Public transport arterial | Residential street without services"
-    },
-    "T3-C1": {
-     "count": 73,
-     "name": "Public transport arterial | Commercial roadside with set-back buildings"
-    },
-    "T3-C2": {
-     "count": 157,
-     "name": "Public transport arterial | Green street with sparse buildings"
-    },
-    "T3-C3": {
-     "count": 52,
-     "name": "Public transport arterial | Residential street with services"
-    },
-    "T3-C4": {
-     "count": 86,
-     "name": "Public transport arterial | Green mixed-use street"
-    },
-    "T3-C5": {
-     "count": 84,
-     "name": "Public transport arterial | Commercial high street"
-    },
-    "T3-C_null": {
-     "count": 50,
-     "name": "Public transport arterial | no reliable building data"
-    }
-   },
+   ],
    "layers": [
     {
      "id": "ss_nain_n",
@@ -245,24 +670,24 @@ window.SM_MANIFEST = {
      "excluded_reason": null,
      "classes": [
       {
-       "min": 0.61931270728794,
-       "label": "< 1.01"
+       "min": 0.5719432416193888,
+       "label": "< 0.93"
       },
       {
-       "min": 1.01,
-       "label": "1.01 – 1.1"
+       "min": 0.932,
+       "label": "0.93 – 1.03"
+      },
+      {
+       "min": 1.03,
+       "label": "1.03 – 1.1"
       },
       {
        "min": 1.1,
-       "label": "1.1 – 1.19"
+       "label": "1.1 – 1.21"
       },
       {
-       "min": 1.19,
-       "label": "1.19 – 1.29"
-      },
-      {
-       "min": 1.29,
-       "label": "≥ 1.29"
+       "min": 1.21,
+       "label": "≥ 1.21"
       }
      ]
     },
@@ -282,23 +707,23 @@ window.SM_MANIFEST = {
      "classes": [
       {
        "min": 0.5,
-       "label": "< 1.34"
+       "label": "< 1.27"
       },
       {
-       "min": 1.34,
-       "label": "1.34 – 1.59"
+       "min": 1.27,
+       "label": "1.27 – 1.5"
       },
       {
-       "min": 1.59,
-       "label": "1.59 – 1.79"
+       "min": 1.5,
+       "label": "1.5 – 1.72"
       },
       {
-       "min": 1.79,
-       "label": "1.79 – 2.07"
+       "min": 1.72,
+       "label": "1.72 – 1.99"
       },
       {
-       "min": 2.07,
-       "label": "≥ 2.07"
+       "min": 1.99,
+       "label": "≥ 1.99"
       }
      ]
     },
@@ -314,27 +739,27 @@ window.SM_MANIFEST = {
      "short": "Integration R2000 m",
      "note": "Normalised angular integration: how easy the segment is to reach from everywhere within the radius (to-movement).",
      "in_model": false,
-     "excluded_reason": "Not used in clustering: the model takes Rn and 800 m. This radius lies between them (Spearman ρ up to 0.69) and is shown for interpretation.",
+     "excluded_reason": "Not used in clustering: the model takes Rn and 800 m. This radius lies between them (Spearman ρ up to 0.71) and is shown for interpretation.",
      "classes": [
       {
-       "min": 0.5,
-       "label": "< 1.26"
+       "min": 0.42836851132100806,
+       "label": "< 1.16"
       },
       {
-       "min": 1.26,
-       "label": "1.26 – 1.49"
+       "min": 1.16,
+       "label": "1.16 – 1.37"
       },
       {
-       "min": 1.49,
-       "label": "1.49 – 1.72"
+       "min": 1.37,
+       "label": "1.37 – 1.59"
       },
       {
-       "min": 1.72,
-       "label": "1.72 – 2.01"
+       "min": 1.59,
+       "label": "1.59 – 1.88"
       },
       {
-       "min": 2.01,
-       "label": "≥ 2.01"
+       "min": 1.88,
+       "label": "≥ 1.88"
       }
      ]
     },
@@ -354,23 +779,23 @@ window.SM_MANIFEST = {
      "classes": [
       {
        "min": 0.0,
-       "label": "< 0.65"
+       "label": "< 0.59"
       },
       {
-       "min": 0.647,
-       "label": "0.65 – 0.9"
+       "min": 0.589,
+       "label": "0.59 – 0.89"
       },
       {
-       "min": 0.903,
-       "label": "0.9 – 1.01"
+       "min": 0.891,
+       "label": "0.89 – 0.99"
       },
       {
-       "min": 1.01,
-       "label": "1.01 – 1.16"
+       "min": 0.992,
+       "label": "0.99 – 1.13"
       },
       {
-       "min": 1.16,
-       "label": "≥ 1.16"
+       "min": 1.13,
+       "label": "≥ 1.13"
       }
      ]
     },
@@ -390,23 +815,23 @@ window.SM_MANIFEST = {
      "classes": [
       {
        "min": 0.0,
-       "label": "< 0.62"
+       "label": "< 0.64"
       },
       {
-       "min": 0.625,
-       "label": "0.62 – 0.88"
+       "min": 0.638,
+       "label": "0.64 – 0.87"
       },
       {
-       "min": 0.875,
-       "label": "0.88 – 1.01"
+       "min": 0.874,
+       "label": "0.87 – 1.01"
       },
       {
        "min": 1.01,
-       "label": "1.01 – 1.14"
+       "label": "1.01 – 1.13"
       },
       {
-       "min": 1.14,
-       "label": "≥ 1.14"
+       "min": 1.13,
+       "label": "≥ 1.13"
       }
      ]
     },
@@ -422,27 +847,27 @@ window.SM_MANIFEST = {
      "short": "Through-movement R2000 m",
      "note": "Normalised angular choice: how often the segment lies on the simplest routes within the radius (through-movement).",
      "in_model": false,
-     "excluded_reason": "Not used in clustering: the model takes Rn and 800 m. This radius lies between them (Spearman ρ up to 0.74) and is shown for interpretation.",
+     "excluded_reason": "Not used in clustering: the model takes Rn and 800 m. This radius lies between them (Spearman ρ up to 0.75) and is shown for interpretation.",
      "classes": [
       {
        "min": 0.0,
-       "label": "< 0.81"
+       "label": "< 0.79"
       },
       {
-       "min": 0.808,
-       "label": "0.81 – 1.01"
+       "min": 0.791,
+       "label": "0.79 – 0.99"
       },
       {
-       "min": 1.01,
-       "label": "1.01 – 1.12"
+       "min": 0.988,
+       "label": "0.99 – 1.11"
       },
       {
-       "min": 1.12,
-       "label": "1.12 – 1.22"
+       "min": 1.11,
+       "label": "1.11 – 1.21"
       },
       {
-       "min": 1.22,
-       "label": "≥ 1.22"
+       "min": 1.21,
+       "label": "≥ 1.21"
       }
      ]
     },
@@ -574,19 +999,19 @@ window.SM_MANIFEST = {
       },
       {
        "min": 0.02394914985723717,
-       "label": "< 0.32"
+       "label": "< 0.33"
       },
       {
-       "min": 0.321,
-       "label": "0.32 – 0.51"
+       "min": 0.333,
+       "label": "0.33 – 0.53"
       },
       {
-       "min": 0.514,
-       "label": "0.51 – 0.89"
+       "min": 0.528,
+       "label": "0.53 – 0.9"
       },
       {
-       "min": 0.885,
-       "label": "≥ 0.89"
+       "min": 0.898,
+       "label": "≥ 0.9"
       }
      ]
     },
@@ -646,19 +1071,19 @@ window.SM_MANIFEST = {
       },
       {
        "min": 0.033341256294153694,
-       "label": "< 0.53"
+       "label": "< 0.55"
       },
       {
-       "min": 0.534,
-       "label": "0.53 – 1.01"
+       "min": 0.545,
+       "label": "0.55 – 1.05"
       },
       {
-       "min": 1.01,
-       "label": "1.01 – 1.94"
+       "min": 1.05,
+       "label": "1.05 – 1.95"
       },
       {
-       "min": 1.94,
-       "label": "≥ 1.94"
+       "min": 1.95,
+       "label": "≥ 1.95"
       }
      ]
     },
@@ -681,20 +1106,20 @@ window.SM_MANIFEST = {
        "label": "0"
       },
       {
-       "min": 0.010326833615911576,
-       "label": "< 412"
+       "min": 0.015675281660541232,
+       "label": "< 436"
       },
       {
-       "min": 412.0,
-       "label": "412 – 1,610"
+       "min": 436.0,
+       "label": "436 – 1,640"
       },
       {
-       "min": 1610.0,
-       "label": "1,610 – 4,520"
+       "min": 1640.0,
+       "label": "1,640 – 4,750"
       },
       {
-       "min": 4520.0,
-       "label": "≥ 4,520"
+       "min": 4750.0,
+       "label": "≥ 4,750"
       }
      ]
     },
@@ -878,185 +1303,654 @@ window.SM_MANIFEST = {
    "id": "wroclaw",
    "label": "Wrocław",
    "run": "wroclaw",
-   "mode": "local",
+   "mode": "own",
    "trained_on": [
     "wroclaw"
    ],
    "file": "data/cities/wroclaw.js",
-   "version": 1791927029,
+   "version": 1791963815,
    "bounds": [
-    16.80291,
-    51.04261,
+    16.80737,
+    51.04298,
     17.17579,
-    51.20846
+    51.20794
    ],
    "stats": {
-    "segments": 7109,
-    "classified": 6632,
-    "borderline": 1550,
-    "k": {
-     "transport": 4,
-     "context": 4
-    },
-    "mean_silhouette": {
-     "transport": 0.3428,
-     "context": 0.4415
-    },
-    "lanes_imputed_share": 0.454,
-    "maxspeed_imputed_share": 0.206,
+    "segments": 7817,
+    "lanes_imputed_share": 0.474,
+    "maxspeed_imputed_share": 0.221,
     "unknown_function_share": 0.038
    },
-   "clusters": {
-    "transport": [
-     {
-      "id": 0,
-      "name": "T0 · Local access street",
-      "count": 1130,
-      "profile": "low through-movement Rn, low speed limit"
+   "typologies": [
+    {
+     "id": "own",
+     "key": "",
+     "kind": "own",
+     "label": "Own typology",
+     "run": "wroclaw",
+     "trained_on": [
+      "wroclaw"
+     ],
+     "trained_on_labels": [
+      "Wrocław"
+     ],
+     "stats": {
+      "classified": 7294,
+      "borderline": 1690,
+      "k": {
+       "transport": 4,
+       "context": 4
+      },
+      "mean_silhouette": {
+       "transport": 0.3477,
+       "context": 0.4435
+      }
      },
-     {
-      "id": 1,
-      "name": "T1 · Ordinary street",
-      "count": 3327,
-      "profile": "low speed limit"
+     "clusters": {
+      "transport": [
+       {
+        "id": 1,
+        "name": "T1 · Local access street",
+        "count": 1298,
+        "profile": "low through-movement Rn, low speed limit"
+       },
+       {
+        "id": 2,
+        "name": "T2 · Ordinary street",
+        "count": 3620,
+        "profile": "low speed limit"
+       },
+       {
+        "id": 3,
+        "name": "T3 · Public transport street with stops",
+        "count": 781,
+        "profile": "high PT stops, high PT routes"
+       },
+       {
+        "id": 4,
+        "name": "T4 · Public transport arterial",
+        "count": 1595,
+        "profile": "high PT routes, high lanes"
+       }
+      ],
+      "context": [
+       {
+        "id": 1,
+        "name": "C1 · Dense residential street, little greenery",
+        "count": 1114,
+        "profile": "low greenery"
+       },
+       {
+        "id": 2,
+        "name": "C2 · Green residential street",
+        "count": 4448,
+        "profile": "close to the city median on every feature"
+       },
+       {
+        "id": 3,
+        "name": "C3 · Institutional street (schools, health, campuses)",
+        "count": 434,
+        "profile": "high social, low residential"
+       },
+       {
+        "id": 4,
+        "name": "C4 · Commercial street",
+        "count": 1078,
+        "profile": "high commercial, high organisations"
+       },
+       {
+        "id": -1,
+        "name": "C_null · no reliable building data",
+        "count": 220
+       }
+      ]
      },
-     {
-      "id": 2,
-      "name": "T2 · Public transport street with stops",
-      "count": 748,
-      "profile": "high PT stops, high PT routes"
-     },
-     {
-      "id": 3,
-      "name": "T3 · Public transport arterial",
-      "count": 1427,
-      "profile": "high lanes, high PT routes"
+     "morphotypes": {
+      "T1-C1": {
+       "count": 272,
+       "name": "Local access street | Dense residential street, little greenery"
+      },
+      "T1-C2": {
+       "count": 840,
+       "name": "Local access street | Green residential street"
+      },
+      "T1-C3": {
+       "count": 50,
+       "name": "Local access street | Institutional street (schools, health, campuses)"
+      },
+      "T1-C4": {
+       "count": 102,
+       "name": "Local access street | Commercial street"
+      },
+      "T1-C_null": {
+       "count": 34,
+       "name": "Local access street | no reliable building data"
+      },
+      "T2-C1": {
+       "count": 715,
+       "name": "Ordinary street | Dense residential street, little greenery"
+      },
+      "T2-C2": {
+       "count": 2229,
+       "name": "Ordinary street | Green residential street"
+      },
+      "T2-C3": {
+       "count": 207,
+       "name": "Ordinary street | Institutional street (schools, health, campuses)"
+      },
+      "T2-C4": {
+       "count": 386,
+       "name": "Ordinary street | Commercial street"
+      },
+      "T2-C_null": {
+       "count": 83,
+       "name": "Ordinary street | no reliable building data"
+      },
+      "T3-C1": {
+       "count": 50,
+       "name": "Public transport street with stops | Dense residential street, little greenery"
+      },
+      "T3-C2": {
+       "count": 483,
+       "name": "Public transport street with stops | Green residential street"
+      },
+      "T3-C3": {
+       "count": 67,
+       "name": "Public transport street with stops | Institutional street (schools, health, campuses)"
+      },
+      "T3-C4": {
+       "count": 160,
+       "name": "Public transport street with stops | Commercial street"
+      },
+      "T3-C_null": {
+       "count": 21,
+       "name": "Public transport street with stops | no reliable building data"
+      },
+      "T4-C1": {
+       "count": 77,
+       "name": "Public transport arterial | Dense residential street, little greenery"
+      },
+      "T4-C2": {
+       "count": 896,
+       "name": "Public transport arterial | Green residential street"
+      },
+      "T4-C3": {
+       "count": 110,
+       "name": "Public transport arterial | Institutional street (schools, health, campuses)"
+      },
+      "T4-C4": {
+       "count": 430,
+       "name": "Public transport arterial | Commercial street"
+      },
+      "T4-C_null": {
+       "count": 82,
+       "name": "Public transport arterial | no reliable building data"
+      }
      }
-    ],
-    "context": [
-     {
-      "id": 0,
-      "name": "C0 · Dense residential street, little greenery",
-      "count": 993,
-      "profile": "low greenery"
+    },
+    {
+     "id": "model-irkutsk",
+     "key": "@1",
+     "kind": "model",
+     "label": "Irkutsk model",
+     "run": "applied_irkutsk",
+     "trained_on": [
+      "irkutsk"
+     ],
+     "trained_on_labels": [
+      "Irkutsk"
+     ],
+     "stats": {
+      "classified": 7294,
+      "borderline": 2073,
+      "k": {
+       "transport": 4,
+       "context": 4
+      },
+      "mean_silhouette": {
+       "transport": 0.3583,
+       "context": 0.356
+      }
      },
-     {
-      "id": 1,
-      "name": "C1 · Green residential street",
-      "count": 4039,
-      "profile": "close to the city median on every feature"
+     "clusters": {
+      "transport": [
+       {
+        "id": 1,
+        "name": "T1 · Local access street",
+        "count": 1317,
+        "profile": "low through-movement Rn, low integration R800 m"
+       },
+       {
+        "id": 2,
+        "name": "T2 · Ordinary street",
+        "count": 3706,
+        "profile": "close to the city median on every feature"
+       },
+       {
+        "id": 3,
+        "name": "T3 · Public transport street with stops",
+        "count": 798,
+        "profile": "high PT stops, high PT routes"
+       },
+       {
+        "id": 4,
+        "name": "T4 · Public transport arterial",
+        "count": 1473,
+        "profile": "high PT routes, high lanes"
+       }
+      ],
+      "context": [
+       {
+        "id": 1,
+        "name": "C1 · Residential street without services",
+        "count": 978,
+        "profile": "close to the city median on every feature"
+       },
+       {
+        "id": 2,
+        "name": "C2 · Green street with sparse buildings",
+        "count": 3731,
+        "profile": "high greenery, low residential"
+       },
+       {
+        "id": 3,
+        "name": "C3 · Institutional street (schools, health, campuses)",
+        "count": 400,
+        "profile": "high social, low residential"
+       },
+       {
+        "id": 4,
+        "name": "C4 · Commercial street",
+        "count": 1965,
+        "profile": "high commercial, high organisations"
+       },
+       {
+        "id": -1,
+        "name": "C_null · no reliable building data",
+        "count": 220
+       }
+      ]
      },
-     {
-      "id": 2,
-      "name": "C2 · Institutional street (schools, health, campuses)",
-      "count": 416,
-      "profile": "high social, low residential"
+     "morphotypes": {
+      "T1-C1": {
+       "count": 266,
+       "name": "Local access street | Residential street without services"
+      },
+      "T1-C2": {
+       "count": 764,
+       "name": "Local access street | Green street with sparse buildings"
+      },
+      "T1-C3": {
+       "count": 47,
+       "name": "Local access street | Institutional street (schools, health, campuses)"
+      },
+      "T1-C4": {
+       "count": 208,
+       "name": "Local access street | Commercial street"
+      },
+      "T1-C_null": {
+       "count": 32,
+       "name": "Local access street | no reliable building data"
+      },
+      "T2-C1": {
+       "count": 628,
+       "name": "Ordinary street | Residential street without services"
+      },
+      "T2-C2": {
+       "count": 1936,
+       "name": "Ordinary street | Green street with sparse buildings"
+      },
+      "T2-C3": {
+       "count": 196,
+       "name": "Ordinary street | Institutional street (schools, health, campuses)"
+      },
+      "T2-C4": {
+       "count": 858,
+       "name": "Ordinary street | Commercial street"
+      },
+      "T2-C_null": {
+       "count": 88,
+       "name": "Ordinary street | no reliable building data"
+      },
+      "T3-C1": {
+       "count": 35,
+       "name": "Public transport street with stops | Residential street without services"
+      },
+      "T3-C2": {
+       "count": 366,
+       "name": "Public transport street with stops | Green street with sparse buildings"
+      },
+      "T3-C3": {
+       "count": 63,
+       "name": "Public transport street with stops | Institutional street (schools, health, campuses)"
+      },
+      "T3-C4": {
+       "count": 313,
+       "name": "Public transport street with stops | Commercial street"
+      },
+      "T3-C_null": {
+       "count": 21,
+       "name": "Public transport street with stops | no reliable building data"
+      },
+      "T4-C1": {
+       "count": 49,
+       "name": "Public transport arterial | Residential street without services"
+      },
+      "T4-C2": {
+       "count": 665,
+       "name": "Public transport arterial | Green street with sparse buildings"
+      },
+      "T4-C3": {
+       "count": 94,
+       "name": "Public transport arterial | Institutional street (schools, health, campuses)"
+      },
+      "T4-C4": {
+       "count": 586,
+       "name": "Public transport arterial | Commercial street"
+      },
+      "T4-C_null": {
+       "count": 79,
+       "name": "Public transport arterial | no reliable building data"
+      }
      },
-     {
-      "id": 3,
-      "name": "C3 · Commercial street",
-      "count": 990,
-      "profile": "high commercial, high organisations"
-     },
-     {
-      "id": -1,
-      "name": "C_null · no reliable building data",
-      "count": 194
+     "compare": {
+      "transport": {
+       "ari": 0.906,
+       "crosswalk": {
+        "rows": [
+         1,
+         2,
+         3,
+         4
+        ],
+        "cols": [
+         1,
+         2,
+         3,
+         4
+        ],
+        "counts": [
+         [
+          1283,
+          12,
+          3,
+          0
+         ],
+         [
+          34,
+          3554,
+          18,
+          14
+         ],
+         [
+          0,
+          0,
+          770,
+          11
+         ],
+         [
+          0,
+          140,
+          7,
+          1448
+         ]
+        ]
+       }
+      },
+      "context": {
+       "ari": 0.667,
+       "crosswalk": {
+        "rows": [
+         1,
+         2,
+         3,
+         4
+        ],
+        "cols": [
+         1,
+         2,
+         3,
+         4
+        ],
+        "counts": [
+         [
+          967,
+          7,
+          23,
+          117
+         ],
+         [
+          11,
+          3720,
+          13,
+          704
+         ],
+         [
+          0,
+          4,
+          364,
+          66
+         ],
+         [
+          0,
+          0,
+          0,
+          1078
+         ]
+        ]
+       }
+      },
+      "morphotype": {
+       "ari": 0.733
+      }
      }
-    ]
-   },
-   "order_by": {
-    "transport": {
-     "id": "ss_nach_n",
-     "label": "through-movement Rn"
     },
-    "context": {
-     "id": "poi_per_100m",
-     "label": "organisations"
+    {
+     "id": "pooled-irkutsk_wroclaw",
+     "key": "@2",
+     "kind": "pooled",
+     "label": "Pooled: Irkutsk + Wrocław",
+     "run": "irkutsk_wroclaw",
+     "trained_on": [
+      "irkutsk",
+      "wroclaw"
+     ],
+     "trained_on_labels": [
+      "Irkutsk",
+      "Wrocław"
+     ],
+     "stats": {
+      "classified": 7294,
+      "borderline": 1666,
+      "k": {
+       "transport": 4,
+       "context": 2
+      },
+      "mean_silhouette": {
+       "transport": 0.3598,
+       "context": 0.5105
+      }
+     },
+     "clusters": {
+      "transport": [
+       {
+        "id": 1,
+        "name": "T1 · low through-movement Rn, low integration R800 m",
+        "count": 1335,
+        "profile": null
+       },
+       {
+        "id": 2,
+        "name": "T2 · average profile",
+        "count": 3779,
+        "profile": "close to the city median on every feature"
+       },
+       {
+        "id": 3,
+        "name": "T3 · high PT stops, high PT routes",
+        "count": 786,
+        "profile": null
+       },
+       {
+        "id": 4,
+        "name": "T4 · high PT routes, high lanes",
+        "count": 1394,
+        "profile": null
+       }
+      ],
+      "context": [
+       {
+        "id": 1,
+        "name": "C1 · average profile",
+        "count": 5450,
+        "profile": "close to the city median on every feature"
+       },
+       {
+        "id": 2,
+        "name": "C2 · high commercial, high organisations",
+        "count": 1624,
+        "profile": null
+       },
+       {
+        "id": -1,
+        "name": "C_null · no reliable building data",
+        "count": 220
+       }
+      ]
+     },
+     "morphotypes": {
+      "T1-C1": {
+       "count": 1129,
+       "name": "low through-movement Rn, low integration R800 m | average profile"
+      },
+      "T1-C2": {
+       "count": 172,
+       "name": "low through-movement Rn, low integration R800 m | high commercial, high organisations"
+      },
+      "T1-C_null": {
+       "count": 34,
+       "name": "low through-movement Rn, low integration R800 m | no reliable building data"
+      },
+      "T2-C1": {
+       "count": 2995,
+       "name": "average profile | average profile"
+      },
+      "T2-C2": {
+       "count": 691,
+       "name": "average profile | high commercial, high organisations"
+      },
+      "T2-C_null": {
+       "count": 93,
+       "name": "average profile | no reliable building data"
+      },
+      "T3-C1": {
+       "count": 509,
+       "name": "high PT stops, high PT routes | average profile"
+      },
+      "T3-C2": {
+       "count": 257,
+       "name": "high PT stops, high PT routes | high commercial, high organisations"
+      },
+      "T3-C_null": {
+       "count": 20,
+       "name": "high PT stops, high PT routes | no reliable building data"
+      },
+      "T4-C1": {
+       "count": 817,
+       "name": "high PT routes, high lanes | average profile"
+      },
+      "T4-C2": {
+       "count": 504,
+       "name": "high PT routes, high lanes | high commercial, high organisations"
+      },
+      "T4-C_null": {
+       "count": 73,
+       "name": "high PT routes, high lanes | no reliable building data"
+      }
+     },
+     "compare": {
+      "transport": {
+       "ari": 0.893,
+       "crosswalk": {
+        "rows": [
+         1,
+         2,
+         3,
+         4
+        ],
+        "cols": [
+         1,
+         2,
+         3,
+         4
+        ],
+        "counts": [
+         [
+          1296,
+          1,
+          1,
+          0
+         ],
+         [
+          39,
+          3573,
+          6,
+          2
+         ],
+         [
+          0,
+          7,
+          769,
+          5
+         ],
+         [
+          0,
+          198,
+          10,
+          1387
+         ]
+        ]
+       }
+      },
+      "context": {
+       "ari": 0.34,
+       "crosswalk": {
+        "rows": [
+         1,
+         2,
+         3,
+         4
+        ],
+        "cols": [
+         1,
+         2
+        ],
+        "counts": [
+         [
+          1060,
+          54
+         ],
+         [
+          4032,
+          416
+         ],
+         [
+          358,
+          76
+         ],
+         [
+          0,
+          1078
+         ]
+        ]
+       }
+      },
+      "morphotype": {
+       "ari": 0.555
+      }
+     }
     }
-   },
-   "morphotypes": {
-    "T0-C0": {
-     "count": 239,
-     "name": "Local access street | Dense residential street, little greenery"
-    },
-    "T0-C1": {
-     "count": 715,
-     "name": "Local access street | Green residential street"
-    },
-    "T0-C2": {
-     "count": 54,
-     "name": "Local access street | Institutional street (schools, health, campuses)"
-    },
-    "T0-C3": {
-     "count": 89,
-     "name": "Local access street | Commercial street"
-    },
-    "T0-C_null": {
-     "count": 33,
-     "name": "Local access street | no reliable building data"
-    },
-    "T1-C0": {
-     "count": 631,
-     "name": "Ordinary street | Dense residential street, little greenery"
-    },
-    "T1-C1": {
-     "count": 2087,
-     "name": "Ordinary street | Green residential street"
-    },
-    "T1-C2": {
-     "count": 191,
-     "name": "Ordinary street | Institutional street (schools, health, campuses)"
-    },
-    "T1-C3": {
-     "count": 348,
-     "name": "Ordinary street | Commercial street"
-    },
-    "T1-C_null": {
-     "count": 70,
-     "name": "Ordinary street | no reliable building data"
-    },
-    "T2-C0": {
-     "count": 50,
-     "name": "Public transport street with stops | Dense residential street, little greenery"
-    },
-    "T2-C1": {
-     "count": 460,
-     "name": "Public transport street with stops | Green residential street"
-    },
-    "T2-C2": {
-     "count": 68,
-     "name": "Public transport street with stops | Institutional street (schools, health, campuses)"
-    },
-    "T2-C3": {
-     "count": 151,
-     "name": "Public transport street with stops | Commercial street"
-    },
-    "T2-C_null": {
-     "count": 19,
-     "name": "Public transport street with stops | no reliable building data"
-    },
-    "T3-C0": {
-     "count": 73,
-     "name": "Public transport arterial | Dense residential street, little greenery"
-    },
-    "T3-C1": {
-     "count": 777,
-     "name": "Public transport arterial | Green residential street"
-    },
-    "T3-C2": {
-     "count": 103,
-     "name": "Public transport arterial | Institutional street (schools, health, campuses)"
-    },
-    "T3-C3": {
-     "count": 402,
-     "name": "Public transport arterial | Commercial street"
-    },
-    "T3-C_null": {
-     "count": 72,
-     "name": "Public transport arterial | no reliable building data"
-    }
-   },
+   ],
    "layers": [
     {
      "id": "ss_nain_n",
@@ -1073,24 +1967,24 @@ window.SM_MANIFEST = {
      "excluded_reason": null,
      "classes": [
       {
-       "min": 0.8059340950431177,
-       "label": "< 1.24"
+       "min": 0.6881863389856026,
+       "label": "< 1.16"
       },
       {
-       "min": 1.24,
-       "label": "1.24 – 1.38"
+       "min": 1.16,
+       "label": "1.16 – 1.3"
       },
       {
-       "min": 1.38,
-       "label": "1.38 – 1.52"
+       "min": 1.3,
+       "label": "1.3 – 1.45"
       },
       {
-       "min": 1.52,
-       "label": "1.52 – 1.68"
+       "min": 1.45,
+       "label": "1.45 – 1.6"
       },
       {
-       "min": 1.68,
-       "label": "≥ 1.68"
+       "min": 1.6,
+       "label": "≥ 1.6"
       }
      ]
     },
@@ -1109,24 +2003,24 @@ window.SM_MANIFEST = {
      "excluded_reason": null,
      "classes": [
       {
-       "min": 0.5,
-       "label": "< 1.29"
+       "min": 0.4921257878166598,
+       "label": "< 1.22"
       },
       {
-       "min": 1.29,
-       "label": "1.29 – 1.54"
+       "min": 1.22,
+       "label": "1.22 – 1.46"
       },
       {
-       "min": 1.54,
-       "label": "1.54 – 1.8"
+       "min": 1.46,
+       "label": "1.46 – 1.73"
       },
       {
-       "min": 1.8,
-       "label": "1.8 – 2.11"
+       "min": 1.73,
+       "label": "1.73 – 2.05"
       },
       {
-       "min": 2.11,
-       "label": "≥ 2.11"
+       "min": 2.05,
+       "label": "≥ 2.05"
       }
      ]
     },
@@ -1142,27 +2036,27 @@ window.SM_MANIFEST = {
      "short": "Integration R2000 m",
      "note": "Normalised angular integration: how easy the segment is to reach from everywhere within the radius (to-movement).",
      "in_model": false,
-     "excluded_reason": "Not used in clustering: the model takes Rn and 800 m. This radius lies between them (Spearman ρ up to 0.78) and is shown for interpretation.",
+     "excluded_reason": "Not used in clustering: the model takes Rn and 800 m. This radius lies between them (Spearman ρ up to 0.81) and is shown for interpretation.",
      "classes": [
       {
-       "min": 0.5,
-       "label": "< 1.22"
+       "min": 0.4001959607688923,
+       "label": "< 1.14"
       },
       {
-       "min": 1.22,
-       "label": "1.22 – 1.45"
+       "min": 1.14,
+       "label": "1.14 – 1.37"
       },
       {
-       "min": 1.45,
-       "label": "1.45 – 1.69"
+       "min": 1.37,
+       "label": "1.37 – 1.61"
       },
       {
-       "min": 1.69,
-       "label": "1.69 – 1.98"
+       "min": 1.61,
+       "label": "1.61 – 1.9"
       },
       {
-       "min": 1.98,
-       "label": "≥ 1.98"
+       "min": 1.9,
+       "label": "≥ 1.9"
       }
      ]
     },
@@ -1182,19 +2076,19 @@ window.SM_MANIFEST = {
      "classes": [
       {
        "min": 0.0,
-       "label": "< 0.64"
+       "label": "< 0.58"
       },
       {
-       "min": 0.639,
-       "label": "0.64 – 0.92"
+       "min": 0.579,
+       "label": "0.58 – 0.91"
       },
       {
-       "min": 0.918,
-       "label": "0.92 – 1.03"
+       "min": 0.908,
+       "label": "0.91 – 1.02"
       },
       {
-       "min": 1.03,
-       "label": "1.03 – 1.17"
+       "min": 1.02,
+       "label": "1.02 – 1.17"
       },
       {
        "min": 1.17,
@@ -1218,14 +2112,14 @@ window.SM_MANIFEST = {
      "classes": [
       {
        "min": 0.0,
-       "label": "< 0.64"
+       "label": "< 0.66"
       },
       {
-       "min": 0.642,
-       "label": "0.64 – 0.9"
+       "min": 0.656,
+       "label": "0.66 – 0.9"
       },
       {
-       "min": 0.901,
+       "min": 0.9,
        "label": "0.9 – 1.04"
       },
       {
@@ -1250,27 +2144,27 @@ window.SM_MANIFEST = {
      "short": "Through-movement R2000 m",
      "note": "Normalised angular choice: how often the segment lies on the simplest routes within the radius (through-movement).",
      "in_model": false,
-     "excluded_reason": "Not used in clustering: the model takes Rn and 800 m. This radius lies between them (Spearman ρ up to 0.81) and is shown for interpretation.",
+     "excluded_reason": "Not used in clustering: the model takes Rn and 800 m. This radius lies between them (Spearman ρ up to 0.84) and is shown for interpretation.",
      "classes": [
       {
        "min": 0.0,
-       "label": "< 0.78"
+       "label": "< 0.76"
       },
       {
-       "min": 0.776,
-       "label": "0.78 – 0.99"
+       "min": 0.758,
+       "label": "0.76 – 0.98"
       },
       {
-       "min": 0.994,
-       "label": "0.99 – 1.13"
+       "min": 0.979,
+       "label": "0.98 – 1.12"
       },
       {
-       "min": 1.13,
-       "label": "1.13 – 1.23"
+       "min": 1.12,
+       "label": "1.12 – 1.22"
       },
       {
-       "min": 1.23,
-       "label": "≥ 1.23"
+       "min": 1.22,
+       "label": "≥ 1.22"
       }
      ]
     },
@@ -1401,20 +2295,20 @@ window.SM_MANIFEST = {
        "label": "0"
       },
       {
-       "min": 0.04799302891559415,
-       "label": "< 0.39"
+       "min": 0.0539329315447596,
+       "label": "< 0.4"
       },
       {
-       "min": 0.389,
-       "label": "0.39 – 0.6"
+       "min": 0.402,
+       "label": "0.4 – 0.62"
       },
       {
-       "min": 0.602,
-       "label": "0.6 – 0.95"
+       "min": 0.624,
+       "label": "0.62 – 0.97"
       },
       {
-       "min": 0.95,
-       "label": "≥ 0.95"
+       "min": 0.973,
+       "label": "≥ 0.97"
       }
      ]
     },
@@ -1473,20 +2367,20 @@ window.SM_MANIFEST = {
        "label": "0"
       },
       {
-       "min": 0.014713141756027965,
-       "label": "< 0.69"
+       "min": 0.03836240562735611,
+       "label": "< 0.74"
       },
       {
-       "min": 0.691,
-       "label": "0.69 – 1.42"
+       "min": 0.736,
+       "label": "0.74 – 1.47"
       },
       {
-       "min": 1.42,
-       "label": "1.42 – 2.92"
+       "min": 1.47,
+       "label": "1.47 – 3.02"
       },
       {
-       "min": 2.92,
-       "label": "≥ 2.92"
+       "min": 3.02,
+       "label": "≥ 3.02"
       }
      ]
     },
@@ -1506,23 +2400,23 @@ window.SM_MANIFEST = {
      "classes": [
       {
        "min": 0.0,
-       "label": "< 232"
+       "label": "< 217"
       },
       {
-       "min": 232.0,
-       "label": "232 – 1,520"
+       "min": 217.0,
+       "label": "217 – 1,510"
       },
       {
-       "min": 1520.0,
-       "label": "1,520 – 3,240"
+       "min": 1510.0,
+       "label": "1,510 – 3,290"
       },
       {
-       "min": 3240.0,
-       "label": "3,240 – 5,960"
+       "min": 3290.0,
+       "label": "3,290 – 6,090"
       },
       {
-       "min": 5960.0,
-       "label": "≥ 5,960"
+       "min": 6090.0,
+       "label": "≥ 6,090"
       }
      ]
     },

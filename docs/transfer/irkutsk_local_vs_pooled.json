@@ -3,17 +3,17 @@
     "irkutsk_local",
     "pooled"
   ],
-  "segments": 4186,
+  "segments": 4528,
   "T_cluster": {
-    "ARI": 0.97,
-    "NMI": 0.945
+    "ARI": 0.965,
+    "NMI": 0.939
   },
   "C_cluster": {
-    "ARI": 0.316,
-    "NMI": 0.351
+    "ARI": 0.376,
+    "NMI": 0.432
   },
   "morphotype": {
-    "ARI": 0.613,
-    "NMI": 0.689
+    "ARI": 0.671,
+    "NMI": 0.741
   }
 }

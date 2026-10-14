@@ -31,6 +31,10 @@ $SM run configs/experiments/irkutsk_wroclaw_pooled_context_k4.yaml
 $SM apply configs/experiments/wroclaw_context_k4.yaml --model "$E/irkutsk/model.joblib"
 $SM apply configs/experiments/irkutsk_context_k4.yaml --model "$E/wroclaw/model.joblib"
 
+echo "== choice of k: bootstrap noise of the silhouette"
+$PY scripts/k_selection.py configs/irkutsk.yaml --runs 30
+$PY scripts/k_selection.py configs/wroclaw.yaml --runs 30
+
 echo "== bootstrap stability"
 $PY scripts/stability.py configs/irkutsk.yaml --runs 30
 $PY scripts/stability.py configs/wroclaw.yaml --runs 30

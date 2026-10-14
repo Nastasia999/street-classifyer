@@ -16,9 +16,9 @@ The tool derives street types from data, separately for the two roles, and
 crosses them:
 
 ```
-              context (place) clusters  C0 … Cm
-transport  T0 │ T0-C0   T0-C1   …
-(link)     T1 │ T1-C0   T1-C1   …
+              context (place) clusters  C1 … Cm
+transport  T1 │ T1-C1   T1-C2   …
+(link)     T2 │ T2-C1   T2-C2   …
 clusters   …  │ …
 ```
 
@@ -45,18 +45,28 @@ A segment is a link between two junctions of the drivable street network.
   and `service` roads (driveways, parking aisles) are excluded: they do not form
   the city-wide vehicular grid. Ways with `access=private|no` are excluded.
 - **Simplification** — OSMnx removes interstitial nodes, so a segment runs from
-  junction to junction. Clusters of junction nodes closer than
+  junction to junction. A node where only two ways meet is kept as a segment end
+  when the street name changes there (a missing name counts as a value of its
+  own) or the street turns from one-way to two-way. The network holds the
+  drivable classes only, so such a node is often a junction with a driveway, a
+  service road or a footway that is not in the graph; without this rule
+  differently named streets were joined into one segment just because no other
+  drivable street met them (165 classified segments in Irkutsk and 376 in
+  Wrocław, e.g. a bridge with the streets on both of its ends). Clusters of
+  junction nodes closer than
   `network.consolidate_tolerance_m` (complex intersections, roundabouts) are
   merged into one junction (Boeing 2025).
 - **Pseudo-junctions are removed.** Consolidation leaves behind nodes where only
-  two segments meet (in Irkutsk 1 124, in Wrocław 1 832, against ~30 in the raw
-  OSMnx graph); one-way/two-way changes and user networks produce them too. A
+  two segments of the same street meet (773 in Irkutsk, 1 265 in Wrocław); user
+  networks split at arbitrary points produce them too. A
   segment that ends at such a node does not end at a junction, so chains through
   them are merged (`network.merge_pseudo_junctions`) with their exact geometry —
   re-running OSMnx simplification is not an option, because it would replace
-  curved streets by straight chords. The merged segment takes the most important
-  `highway` value, is one-way if most of its length is, and keeps all lanes,
-  speed and name values. Afterwards every node has degree 1 (dead end) or ≥ 3.
+  curved streets by straight chords. The same rule as above applies: segments
+  with different names or different one-way status are not merged. The merged
+  segment takes the most important `highway` value and keeps all lanes and
+  speed values. Afterwards every node has degree 1 (dead end) or ≥ 3, or
+  separates two different streets.
   Crossings without a shared node are left as they are: in both cities all of
   them but one are bridges or tunnels.
 - **Divided roads are not merged.** The two carriageways of a dual carriageway
@@ -246,9 +256,32 @@ Both blocks use the same procedure.
    one with the highest mean silhouette is kept, among solutions whose smallest
    cluster holds at least `min_cluster_frac` of the segments (tiny clusters of
    outliers inflate the silhouette without being a street type).
+   The mean silhouette is itself an estimate: `scripts/k_selection.py` refits
+   every k on 30 random 80 % subsamples and reports the spread of the
+   silhouette, the paired difference from the best k, how often each k wins and
+   how stable its partition is (ARI against the fit on all segments). When the
+   best k is not distinguishable from another beyond this noise, the silhouette
+   does not choose k, and k is set in the config instead, on stated grounds.
+   In the case study (`docs/k_selection/`) Wrocław chooses k = 4 in both blocks
+   in 30 of 30 subsamples. Irkutsk does not:
+
+   | Irkutsk | k = 2 | k = 4 | difference (k=4 − k=2) | wins k=2 / k=4 | ARI mean (min), k=2 / k=4 |
+   |---|---|---|---|---|---|
+   | Transport | 0.419 ± 0.017 | 0.410 ± 0.004 | −0.009 ± 0.017 | 24 / 6 | 0.987 (0.87) / 0.988 (0.90) |
+   | Context | 0.555 ± 0.016 | 0.503 ± 0.042 | −0.053 ± 0.045 | 26 / 3 | 0.895 (0.12) / 0.942 (0.47) |
+
+   In transport the two are equal within the noise and equally stable; in
+   context k = 2 has the higher silhouette, but in some subsamples it splits the
+   city in a completely different way (ARI 0.12), so it is not a stable
+   pattern. k = 5 and 6 produce a cluster below `min_cluster_frac` in 90–97 % of
+   the subsamples. Irkutsk is therefore run with k = 4 in both blocks: the more
+   stable partition, and the same k as Wrocław, which keeps the two typologies
+   directly comparable. Before segments were split at name changes, the same
+   scan chose k = 6 for Irkutsk context — a further sign that the silhouette
+   ranking there is within its noise.
 3. **KMeans** (`kmeans_n_init` restarts, fixed `random_state`).
-4. **Stable numbering.** Clusters are renumbered by the ascending mean of
-   `order_by` (default NACH for transport — T0 carries the least through-movement;
+4. **Stable numbering.** Clusters are numbered from 1 by the ascending mean of
+   `order_by` (default NACH for transport — T1 carries the least through-movement;
    organisations per 100 m for context), so labels mean the same on every run.
 5. **Confidence.** Each KMeans cluster is modelled as a Gaussian with the
    cluster's own mean, covariance (`gmm_covariance_type`; clusters with fewer
@@ -330,14 +363,13 @@ per cluster the mean Jaccard coefficient of its best-matching cluster (Hennig
 
 | Run | Transport ARI mean (min) | Context ARI mean (min) | Least stable context cluster (Jaccard) |
 |---|---|---|---|
-| Irkutsk, auto k (T 4, C 6) | 0.995 (0.99) | 0.93 (0.87) | C4 green with organisations (0.61) |
-| Irkutsk, context k = 4 | 0.995 (0.99) | 0.90 (0.56) | C3 green with commerce (0.65) |
-| Wrocław, auto k (T 4, C 4) | 0.98 (0.94) | 0.88 (0.62) | C2 social (0.77) |
+| Irkutsk (T 4, C 4, fixed) | 0.99 (0.90) | 0.95 (0.47) | C3 institutional (0.83) |
+| Wrocław (T 4, C 4, auto) | 0.98 (0.94) | 0.99 (0.98) | C3 institutional (0.98) |
 
-Every transport cluster is stable (Jaccard ≥ 0.98). Context clusters are stable
-on average; the small mixed classes (green streets with shops or institutions)
-are the least sharply delimited and should be read as transitions rather than
-types.
+Every transport cluster is stable (Jaccard ≥ 0.98), and so is every context
+cluster (≥ 0.83). The institutional class is the least sharply delimited in
+Irkutsk, where it is small (185 segments) and in a few refits merges with
+residential streets — hence the low minimum ARI.
 
 ### 9.3 Transferability between cities
 
@@ -347,38 +379,44 @@ city was labelled by its own model (local), by the other city's model
 
 | Labelling compared with the city's own | Transport | Context | Morphotype |
 |---|---|---|---|
-| Wrocław by the Irkutsk model, auto k | 0.91 | 0.44 | 0.57 |
-| Irkutsk by the Wrocław model, auto k | 0.91 | 0.61 | 0.74 |
-| Wrocław by the Irkutsk model, context k = 4 in both | 0.91 | 0.42 | 0.58 |
-| Irkutsk by the Wrocław model, context k = 4 in both | 0.91 | 0.64 | 0.76 |
-| Irkutsk by the pooled model, auto k | 0.97 | 0.32 | 0.61 |
-| Wrocław by the pooled model, auto k | 0.91 | 0.36 | 0.57 |
+| Wrocław by the Irkutsk model | 0.91 | 0.67 | 0.73 |
+| Irkutsk by the Wrocław model | 0.89 | 0.73 | 0.81 |
+| Irkutsk by the pooled model, auto k (T 4, C 2) | 0.97 | 0.38 | 0.67 |
+| Wrocław by the pooled model, auto k (T 4, C 2) | 0.89 | 0.34 | 0.55 |
+| Irkutsk by the pooled model, context k = 4 | 0.97 | 0.52 | 0.72 |
+| Wrocław by the pooled model, context k = 4 | 0.89 | 0.40 | 0.54 |
 
 - The **transport typology transfers almost perfectly**: under the other city's
-  model 91–99 % of the segments of every class keep their class. Classes defined
+  model nearly all segments of every class keep their class. Classes defined
   by space syntax and public transport describe the same street roles in a
   Siberian and a Central European city.
-- The **context typology transfers only in part**, and fixing the same number
-  of classes does not change that (0.42–0.64 with k = 4). Comparing the k = 4
-  partitions class by class:
-  - two types are shared: *built-up streets with little greenery* (Irkutsk C0
-    and Wrocław C0 keep 99 % and 75 % of their segments under the other model)
-    and *green, mostly non-residential streets* (90 % and 72 %);
-  - *commercial* is relative: 73 % of Irkutsk's commercial streets are ordinary
-    built-up streets by Wrocław's standards, while 96 % of Wrocław's commercial
-    streets are commercial by Irkutsk's;
-  - Wrocław's *social / institutional* type has no counterpart in Irkutsk and is
-    split between the green classes.
+- The **context typology has the same four types in both cities** —
+  residential, green, institutional and commercial streets — and each model
+  finds the other city's classes: 84–100 % of the segments of every Wrocław
+  class keep their type under the Irkutsk model, and Irkutsk's residential and
+  green streets keep theirs under the Wrocław model (100 %). The thresholds are
+  relative: by Wrocław's standards 39 % of Irkutsk's commercial streets and
+  36 % of its institutional streets are ordinary residential streets, while
+  every Wrocław commercial street is commercial by Irkutsk's. Services are
+  denser along Wrocław's streets, so what stands out in Irkutsk is ordinary
+  there. (Before segments were split at name changes, context transferred
+  worse with the same k = 4, ARI 0.42–0.64. The runs differ in the segmentation
+  and in a fresh download of the OSM network; the likely reason is that
+  segments joining differently named streets mixed their surroundings.)
 - The **pooled** model with automatic k keeps only two context classes and
-  therefore agrees with neither city's finer local partition (0.32–0.36).
+  therefore agrees with neither city's finer local partition (0.34–0.38);
+  fixing four pooled context classes helps only in part (0.40–0.52), because
+  the pooled classes are drawn between the two cities' standards.
 
 Practical consequence: the transport typology can be defined once and applied
 anywhere. Context types depend on what is ordinary in the training cities; a
 typology that is to carry the same design guidance across cities should be a
 pooled model trained on a diverse set of cities, with the number of context
 classes fixed by the guidance rather than by the silhouette. All experiment
-configs are in `configs/experiments/`, the scores in `docs/transfer/` and
-`docs/stability/`; `scripts/reproduce_case_study.sh` recomputes them.
+configs are in `configs/experiments/` (with k = 4 now used by both local runs,
+the context k = 4 experiment differs from them only in the pooled model), the
+scores in `docs/transfer/`, `docs/stability/` and `docs/k_selection/`;
+`scripts/reproduce_case_study.sh` recomputes them.
 
 ### 9.4 Unit tests
 
@@ -386,7 +424,7 @@ configs are in `configs/experiments/`, the scores in `docs/transfer/` and
 igraph closeness and betweenness exactly when the radius is unbounded; the
 metric cut-off; NAIN/NACH formulas; divided-road twins (opposite directions,
 continuation of the same street, same-direction parallels); tag parsing and
-precedence rules; pseudo-junction merging that keeps curved geometry; config merging, `extends` and validation; unique generated cluster names; scaler behaviour on constant,
+precedence rules; pseudo-junction merging that keeps curved geometry and stops at a change of street name or of one-way status; config merging, `extends` and validation; unique generated cluster names; scaler behaviour on constant,
 near-constant and extreme features; block independence, ordering, C_null
 handling and model save/load round trips.
 

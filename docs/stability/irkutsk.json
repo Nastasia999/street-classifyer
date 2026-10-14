@@ -4,28 +4,26 @@
   "subsample": 0.8,
   "k": {
     "transport": 4,
-    "context": 6
+    "context": 4
   },
   "transport": {
-    "ARI_mean": 0.995,
-    "ARI_min": 0.987,
+    "ARI_mean": 0.988,
+    "ARI_min": 0.901,
     "jaccard_by_cluster": {
-      "T0 · low through-movement Rn, low integration R800 m": 0.995,
-      "T1 · average profile": 0.998,
-      "T2 · high PT stops, high PT routes": 0.987,
-      "T3 · high PT routes, high lanes": 0.994
+      "T1 · Local access street": 0.991,
+      "T2 · Ordinary street": 0.994,
+      "T3 · Public transport street with stops": 0.981,
+      "T4 · Public transport arterial": 0.982
     }
   },
   "context": {
-    "ARI_mean": 0.925,
-    "ARI_min": 0.868,
+    "ARI_mean": 0.946,
+    "ARI_min": 0.47,
     "jaccard_by_cluster": {
-      "C0 · average profile": 0.971,
-      "C1 · high commercial, high greenery": 0.688,
-      "C2 · high greenery, low residential": 0.895,
-      "C3 · high organisations, high commercial, high social": 0.791,
-      "C4 · high greenery, high organisations": 0.605,
-      "C5 · high commercial, high organisations, low residential": 0.689
+      "C1 · Residential street without services": 0.976,
+      "C2 · Green street with sparse buildings": 0.924,
+      "C3 · Institutional street (schools, health, campuses)": 0.829,
+      "C4 · Commercial street": 0.927
     }
   }
 }

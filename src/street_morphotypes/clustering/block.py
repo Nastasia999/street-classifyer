@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 class BlockResult:
     """Labels of one block for a set of segments (row order of the input frame)."""
 
-    labels: np.ndarray        # ordered cluster ids 0..k-1
+    labels: np.ndarray        # ordered cluster ids 1..k
     confidence: np.ndarray    # Gaussian posterior of the assigned cluster
     silhouette: np.ndarray    # per-segment silhouette
     Z: np.ndarray             # scaled feature matrix
@@ -114,12 +114,12 @@ class BlockClusterer:
                         block, order_by, scaler.features[0])
             order_by = scaler.features[0]
         means = pd.Series(df[order_by].to_numpy(dtype=float)).groupby(km.labels_).mean()
-        remap = {int(old): new for new, old in enumerate(means.sort_values().index)}
+        remap = {int(old): new for new, old in enumerate(means.sort_values().index, start=1)}
         labels = np.array([remap[x] for x in km.labels_], dtype=int)
 
         inv = {new: old for old, new in remap.items()}
-        centroids = pd.DataFrame(km.cluster_centers_[[inv[i] for i in range(k)]],
-                                 columns=scaler.features)
+        centroids = pd.DataFrame(km.cluster_centers_[[inv[i] for i in range(1, k + 1)]],
+                                 columns=scaler.features, index=range(1, k + 1))
         profiles = df[scaler.features].astype(float).groupby(labels).median()
         sizes = {int(c): int(n) for c, n in zip(*np.unique(labels, return_counts=True))}
         model = BlockModel(block, scaler, km, gmm, remap, order_by, centroids, profiles, sizes)

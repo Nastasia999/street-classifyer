@@ -51,6 +51,7 @@ def test_blocks_are_clustered_independently_and_ordered():
     t = res.table["T_cluster"]
     means = df.groupby(t)["t1"].mean()
     assert means.is_monotonic_increasing                  # ordered by order_by
+    assert sorted(t.unique()) == [1, 2, 3]                # numbered from 1
     assert (res.table.loc[:4, "C_cluster"] == -1).all()   # context_null -> C_null
     assert res.table.loc[:4, "morphotype"].str.endswith("C_null").all()
     assert res.table["T_confidence"].between(0, 1).all()
@@ -58,12 +59,12 @@ def test_blocks_are_clustered_independently_and_ordered():
 
 def test_model_roundtrip_reproduces_labels(tmp_path):
     df = synthetic()
-    clf = MorphotypeClassifier(clustering_cfg(), NamesConfig(transport={0: "Quiet"}, context={}, morphotype={}))
+    clf = MorphotypeClassifier(clustering_cfg(), NamesConfig(transport={1: "Quiet"}, context={}, morphotype={}))
     model, res = clf.fit(df, {}, ["test"])
     model.save(tmp_path / "m.joblib")
     again = clf.apply(MorphotypeModel.load(tmp_path / "m.joblib"), df)
     pd.testing.assert_series_equal(again.table["morphotype"], res.table["morphotype"])
-    assert res.table.loc[res.table["T_cluster"] == 0, "T_name"].iloc[0] == "T0 · Quiet"
+    assert res.table.loc[res.table["T_cluster"] == 1, "T_name"].iloc[0] == "T1 · Quiet"
 
 
 def test_generated_names_are_unique():

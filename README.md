@@ -10,12 +10,15 @@ continuous street wall, dense commercial"*.
 
 ```
 OSM network ──► segments ──► space syntax (NAIN, NACH) ─┐
-            └─► lanes, speed limit, PT routes & stops ──┴─► transport block ─► KMeans ─► T0…Tk ┐
+            └─► lanes, speed limit, PT routes & stops ──┴─► transport block ─► KMeans ─► T1…Tk ┐
 OSM buildings, POI, land use, green ──► frontage, organisations, greenery,                    ├─► morphotype T × C
-                                        building age, functional mix ──► context block ─► KMeans ─► C0…Cm ┘
+                                        building age, functional mix ──► context block ─► KMeans ─► C1…Cm ┘
 ```
 
 - Works for any place OSM covers: a city name, a point with a radius, or your own polygon.
+- Segments run from junction to junction and also end where the street name changes, so two
+  differently named streets are never one segment just because no other drivable street meets
+  them.
 - Space syntax angular segment analysis (NAIN, NACH; global and metric radii), with exact
   agreement to igraph checked by tests.
 - Context metrics measured in one-sided strips beyond the carriageway edge; the two
@@ -33,18 +36,23 @@ The method and its assumptions are described in [docs/METHODOLOGY.md](docs/METHO
 
 Two cities of similar size and population (265 km², 620 000 and 293 km², 670 000), both
 with a historic core and large post-war housing estates, processed with the same defaults (only
-the national speed-limit defaults differ). Each run takes 2–5 minutes once the OSM layers are
+the national speed-limit defaults and the fixed k in Irkutsk differ). Each run takes 2–5 minutes once the OSM layers are
 cached.
 
 | | Irkutsk | Wrocław |
 |---|---|---|
-| Classified segments (junction to junction) | 4 186 | 6 632 |
-| Median segment length | 150 m | 126 m |
-| Transport clusters (auto k, mean silhouette) | 4, 0.41 | 4, 0.34 |
-| Context clusters (auto k, mean silhouette) | 6, 0.59 | 4, 0.44 |
-| Borderline segments | 18 % | 23 % |
-| Lanes / speed limit filled from defaults | 58 % / 60 % | 45 % / 21 % |
+| Classified segments (junction to junction) | 4 528 | 7 294 |
+| Median segment length | 144 m | 120 m |
+| Transport clusters (k, mean silhouette) | 4\*, 0.41 | 4, 0.35 |
+| Context clusters (k, mean silhouette) | 4\*, 0.48 | 4, 0.44 |
+| Borderline segments | 20 % | 23 % |
+| Lanes / speed limit filled from defaults | 61 % / 63 % | 47 % / 22 % |
 | Floor area with unknown function | 7.6 % | 3.8 % |
+
+\* In Wrocław the silhouette picks k = 4 in both blocks in every bootstrap subsample. In Irkutsk
+it does not separate k = 2 from k = 4 beyond its own noise, and the two-class context partition is
+unstable, so k = 4 is fixed in the config
+([METHODOLOGY.md § 7](docs/METHODOLOGY.md#7-clustering), `scripts/k_selection.py`).
 
 ![Irkutsk: transport and context clusters](docs/images/irkutsk_clusters.png)
 
@@ -61,17 +69,18 @@ median) show what each class means; the class composition shows how the two citi
 
 | Check | Transport block | Context block |
 |---|---|---|
-| Bootstrap stability, 30 refits on 80 % subsamples (mean ARI): Irkutsk / Wrocław | 0.995 / 0.98 | 0.93 / 0.88 |
-| Transfer: a city labelled by the other city's model vs. by its own (ARI) | 0.91 | 0.44–0.61 |
-| Transfer with the same k = 4 context classes in both cities | 0.91 | 0.42–0.64 |
+| Bootstrap stability, 30 refits on 80 % subsamples (mean ARI): Irkutsk / Wrocław | 0.99 / 0.98 | 0.95 / 0.99 |
+| Transfer: a city labelled by the other city's model vs. by its own (ARI) | 0.89–0.91 | 0.67–0.73 |
 
 - The **transport typology is universal**: the four classes found independently in Irkutsk and
   Wrocław (local streets, ordinary streets, PT streets with stops, PT arterials) are practically
   the same classes, and each city's model reproduces the other's.
-- The **context typology is partly city-specific**. Two context types are shared — built-up
-  streets with little greenery, and green, mostly non-residential streets — but "commercial" and
-  "social" are relative: Irkutsk's commercial streets look ordinary by Wrocław's standards, and
-  Wrocław's social-institutional streets have no counterpart in Irkutsk. A typology meant to
+- The **context typology has the same four types in both cities** — residential streets,
+  green streets, institutional streets (schools, health, campuses) and commercial streets — and
+  each city's model finds the other's classes (84–100 % of every Wrocław class keep their type
+  under the Irkutsk model). The thresholds are relative, though: by Wrocław's standards 39 % of
+  Irkutsk's commercial streets and 36 % of its institutional streets are ordinary residential
+  streets, while every Wrocław commercial street is commercial by Irkutsk's. A typology meant to
   carry the same design guidance across cities should therefore be a pooled model trained on a
   diverse set of cities, not one city's model.
 
@@ -190,6 +199,9 @@ transport metrics, context metrics and the final morphotypes.
   `outputs/`: a city that is no longer among the outputs disappears from the page. For each city the
   local run is used, otherwise the pooled run that contains it. Rebuild by hand with
   `street-morphotypes web`. Runs with `output: {web: false}` (experiments, test areas) are left out.
+- **Typology switch.** A city is also shown with every other typology that labelled it: another
+  city's model (`street-morphotypes apply`) and the pooled runs that contain it. For each one the page
+  shows on the map which streets change class against the city's own typology, with the agreement (ARI).
 - **Basemap key.** Copy `web/config.example.js` to `web/config.js` (ignored by git) and put there a raster
   tile URL with your key (`basemapTiles`, e.g. CARTO Positron) or a MapTiler key; without either the page uses
   the keyless CARTO Positron style.

@@ -3,17 +3,17 @@
     "wroclaw_local",
     "irkutsk_model"
   ],
-  "segments": 6632,
+  "segments": 7294,
   "T_cluster": {
-    "ARI": 0.909,
+    "ARI": 0.906,
     "NMI": 0.877
   },
   "C_cluster": {
-    "ARI": 0.437,
-    "NMI": 0.466
+    "ARI": 0.667,
+    "NMI": 0.671
   },
   "morphotype": {
-    "ARI": 0.572,
-    "NMI": 0.681
+    "ARI": 0.73,
+    "NMI": 0.784
   }
 }

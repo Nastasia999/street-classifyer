@@ -134,9 +134,9 @@ class FigureMaker:
             k = model.block(block).k
             colors = _ordinal(ramp, k)
             y = 0
-            for c in range(k):
+            for c in range(1, k + 1):
                 vals = np.sort(r.silhouette[r.labels == c])
-                ax.barh(np.arange(y, y + len(vals)), vals, height=1.0, color=colors[c], linewidth=0)
+                ax.barh(np.arange(y, y + len(vals)), vals, height=1.0, color=colors[c - 1], linewidth=0)
                 ax.text(-0.02, y + len(vals) / 2, model.names[block][c].split(" · ")[0], ha="right",
                         va="center", fontsize=8, color=INK_2)
                 y += len(vals) + max(3, len(r.labels) // 60)
@@ -173,8 +173,8 @@ class FigureMaker:
     def morphotype_matrix(self, result: ClassificationResult, model: MorphotypeModel) -> None:
         t = result.table
         kt, kc = model.transport.k, model.context.k
-        cols = list(range(kc)) + ([-1] if (t["C_cluster"] < 0).any() else [])
-        m = pd.crosstab(t["T_cluster"], t["C_cluster"]).reindex(index=range(kt), columns=cols, fill_value=0)
+        cols = list(range(1, kc + 1)) + ([-1] if (t["C_cluster"] < 0).any() else [])
+        m = pd.crosstab(t["T_cluster"], t["C_cluster"]).reindex(index=range(1, kt + 1), columns=cols, fill_value=0)
         fig, ax = plt.subplots(figsize=(1.6 * len(cols) + 3, 0.7 * kt + 1.6))
         ax.imshow(m.to_numpy(), cmap=SEQ_BLUE, aspect="auto")
         vmax = m.to_numpy().max() or 1
@@ -183,7 +183,7 @@ class FigureMaker:
                     color="white" if v > 0.55 * vmax else INK)
         ax.set_xticks(range(len(cols)), [model.names["context"].get(c, "C_null").replace(" · ", "\n")
                                          for c in cols], fontsize=7.5)
-        ax.set_yticks(range(kt), [model.names["transport"][c] for c in range(kt)], fontsize=8)
+        ax.set_yticks(range(kt), [model.names["transport"][c] for c in range(1, kt + 1)], fontsize=8)
         ax.tick_params(length=0)
         for s in ax.spines.values():
             s.set_visible(False)
@@ -223,18 +223,18 @@ class FigureMaker:
 
     def _ordinal_map(self, ax, gdf, column, names, ramp, title, null_label=None) -> None:
         classified = gdf[gdf[column].notna()]
-        k = int(classified[column].max()) + 1 if len(classified) else 0
+        k = int(classified[column].max()) if len(classified) else 0
         colors = _ordinal(ramp, k)
         self._map_axes(ax, gdf)
         handles = []
         if null_label is not None and (classified[column] < 0).any():
             classified[classified[column] < 0].plot(ax=ax, color=NULL_COLOR, linewidth=0.9)
             handles.append(Line2D([], [], color=NULL_COLOR, lw=3, label=null_label))
-        for c in range(k):
+        for c in range(1, k + 1):
             part = classified[classified[column] == c]
             if len(part):
-                part.plot(ax=ax, color=colors[c], linewidth=1.2)
-            handles.append(Line2D([], [], color=colors[c], lw=3, label=names.get(c, str(c))))
+                part.plot(ax=ax, color=colors[c - 1], linewidth=1.2)
+            handles.append(Line2D([], [], color=colors[c - 1], lw=3, label=names.get(c, str(c))))
         ax.legend(handles=handles, loc="upper left", bbox_to_anchor=(0.0, 0.0), fontsize=8)
         ax.set_title(title)
 

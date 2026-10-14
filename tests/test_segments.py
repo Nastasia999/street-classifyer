@@ -73,3 +73,31 @@ def test_merged_user_segments_keep_all_ids():
     out = PseudoJunctionMerger(["residential"]).merge(segs)
     assert sorted(map(str, out["user_id"])) == ["['a', 'b']", "c", "d"]
     assert out["u"].dtype == segs["u"].dtype and out["oneway"].dtype == bool
+
+
+def chain(names, oneway=(False, False)):
+    """A(0) - B(1) - C(2), then two side streets at C so that C is a junction."""
+    lines = [LineString([(0, 0), (100, 0)]), LineString([(100, 0), (200, 0)]),
+             LineString([(200, 0), (200, 100)]), LineString([(200, 0), (300, 0)])]
+    return gpd.GeoDataFrame({
+        "u": [0, 1, 2, 2], "v": [1, 2, 3, 4], "oneway": list(oneway) + [False, False],
+        "highway": ["residential"] * 4, "lanes_raw": [None] * 4, "maxspeed_raw": [None] * 4,
+        "name": list(names) + ["Side St", "Other St"], "osm_ways": [[1], [2], [3], [4]],
+        "user_id": [None] * 4}, geometry=lines)
+
+
+def test_street_name_change_ends_a_segment():
+    from street_morphotypes.network.segments import PseudoJunctionMerger
+    for names in (["Main St", "High St"], ["Main St", None], [None, "Main St"]):
+        out = PseudoJunctionMerger(["residential"]).merge(chain(names))
+        assert len(out) == 4, names
+    out = PseudoJunctionMerger(["residential"]).merge(chain([None, None]))  # both unnamed: one street
+    assert len(out) == 3
+
+
+def test_one_way_change_ends_a_segment():
+    from street_morphotypes.network.segments import PseudoJunctionMerger
+    out = PseudoJunctionMerger(["residential"]).merge(chain(["Main St", "Main St"], oneway=(True, False)))
+    assert len(out) == 4
+    out = PseudoJunctionMerger(["residential"]).merge(chain(["Main St", "Main St"], oneway=(True, True)))
+    assert len(out) == 3 and out["oneway"].sum() == 1

@@ -27,12 +27,12 @@ metrics:
 # They belong to this run: with another k or new data, check the profiles and rename.
 names:
   transport:
-    0: Local access street
-    1: Ordinary street
-    2: Public transport street with stops
-    3: Public transport arterial
+    1: Local access street
+    2: Ordinary street
+    3: Public transport street with stops
+    4: Public transport arterial
   context:
-    0: Dense residential street, little greenery
-    1: Green residential street
-    2: Institutional street (schools, health, campuses)
-    3: Commercial street
+    1: Dense residential street, little greenery
+    2: Green residential street
+    3: Institutional street (schools, health, campuses)
+    4: Commercial street

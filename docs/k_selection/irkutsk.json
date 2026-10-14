@@ -1,0 +1,144 @@
+{
+  "city": "irkutsk",
+  "runs": 30,
+  "subsample": 0.8,
+  "transport": {
+    "features": [
+      "lanes",
+      "maxspeed",
+      "pt_routes",
+      "pt_stops_per_100m",
+      "ss_nain_n",
+      "ss_nach_n",
+      "ss_nain_800",
+      "ss_nach_800"
+    ],
+    "best_mean_silhouette_k": 2,
+    "by_k": [
+      {
+        "k": 2,
+        "silhouette_mean": 0.419,
+        "silhouette_sd": 0.017,
+        "diff_from_best_mean": 0.0,
+        "diff_from_best_sd": 0.0,
+        "min_cluster_ok_share": 1.0,
+        "wins": 24,
+        "ARI_mean": 0.987,
+        "ARI_min": 0.868
+      },
+      {
+        "k": 3,
+        "silhouette_mean": 0.392,
+        "silhouette_sd": 0.005,
+        "diff_from_best_mean": -0.027,
+        "diff_from_best_sd": 0.015,
+        "min_cluster_ok_share": 1.0,
+        "wins": 0,
+        "ARI_mean": 0.986,
+        "ARI_min": 0.889
+      },
+      {
+        "k": 4,
+        "silhouette_mean": 0.41,
+        "silhouette_sd": 0.004,
+        "diff_from_best_mean": -0.009,
+        "diff_from_best_sd": 0.017,
+        "min_cluster_ok_share": 1.0,
+        "wins": 6,
+        "ARI_mean": 0.988,
+        "ARI_min": 0.901
+      },
+      {
+        "k": 5,
+        "silhouette_mean": 0.253,
+        "silhouette_sd": 0.002,
+        "diff_from_best_mean": -0.166,
+        "diff_from_best_sd": 0.018,
+        "min_cluster_ok_share": 1.0,
+        "wins": 0,
+        "ARI_mean": 0.962,
+        "ARI_min": 0.839
+      },
+      {
+        "k": 6,
+        "silhouette_mean": 0.248,
+        "silhouette_sd": 0.002,
+        "diff_from_best_mean": -0.171,
+        "diff_from_best_sd": 0.017,
+        "min_cluster_ok_share": 1.0,
+        "wins": 0,
+        "ARI_mean": 0.962,
+        "ARI_min": 0.806
+      }
+    ]
+  },
+  "context": {
+    "features": [
+      "frontage",
+      "poi_per_100m",
+      "green_m2_per_100m",
+      "fn_residential",
+      "fn_commercial",
+      "fn_social",
+      "fn_industrial"
+    ],
+    "best_mean_silhouette_k": 2,
+    "by_k": [
+      {
+        "k": 2,
+        "silhouette_mean": 0.555,
+        "silhouette_sd": 0.016,
+        "diff_from_best_mean": 0.0,
+        "diff_from_best_sd": 0.0,
+        "min_cluster_ok_share": 1.0,
+        "wins": 26,
+        "ARI_mean": 0.895,
+        "ARI_min": 0.119
+      },
+      {
+        "k": 3,
+        "silhouette_mean": 0.484,
+        "silhouette_sd": 0.044,
+        "diff_from_best_mean": -0.071,
+        "diff_from_best_sd": 0.046,
+        "min_cluster_ok_share": 1.0,
+        "wins": 0,
+        "ARI_mean": 0.941,
+        "ARI_min": 0.469
+      },
+      {
+        "k": 4,
+        "silhouette_mean": 0.503,
+        "silhouette_sd": 0.042,
+        "diff_from_best_mean": -0.053,
+        "diff_from_best_sd": 0.045,
+        "min_cluster_ok_share": 0.97,
+        "wins": 3,
+        "ARI_mean": 0.942,
+        "ARI_min": 0.472
+      },
+      {
+        "k": 5,
+        "silhouette_mean": 0.515,
+        "silhouette_sd": 0.035,
+        "diff_from_best_mean": -0.04,
+        "diff_from_best_sd": 0.043,
+        "min_cluster_ok_share": 0.1,
+        "wins": 0,
+        "ARI_mean": 0.958,
+        "ARI_min": 0.722
+      },
+      {
+        "k": 6,
+        "silhouette_mean": 0.504,
+        "silhouette_sd": 0.045,
+        "diff_from_best_mean": -0.051,
+        "diff_from_best_sd": 0.051,
+        "min_cluster_ok_share": 0.03,
+        "wins": 1,
+        "ARI_mean": 0.938,
+        "ARI_min": 0.739
+      }
+    ]
+  }
+}

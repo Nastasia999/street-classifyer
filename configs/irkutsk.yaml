@@ -5,18 +5,25 @@ area:
   place: "Irkutsk, Irkutsk Oblast, Russia"
   network_buffer_m: 2000
 
+# k is fixed, not chosen by the silhouette: in Irkutsk the silhouette does not
+# separate k = 2 from k = 4 beyond its bootstrap noise (transport: -0.009 +- 0.017;
+# context: -0.05 +- 0.05), while the two-class context partition is unstable
+# (ARI down to 0.12 across subsamples). k = 4 in both blocks is the more stable
+# choice and matches Wroclaw. Evidence: scripts/k_selection.py -> docs/k_selection/.
+clustering:
+  transport: {k: 4}
+  context: {k: 4}
+
 # Names of the classes, written after reading their profiles (outputs/irkutsk/morphotypes.xlsx).
 # They belong to this run: with another k or new data, check the profiles and rename.
 names:
   transport:
-    0: Local access street
-    1: Ordinary street
-    2: Public transport street with stops
-    3: Public transport arterial
+    1: Local access street
+    2: Ordinary street
+    3: Public transport street with stops
+    4: Public transport arterial
   context:
-    0: Residential street without services
-    1: Commercial roadside with set-back buildings
+    1: Residential street without services
     2: Green street with sparse buildings
-    3: Residential street with services
-    4: Green mixed-use street
-    5: Commercial high street
+    3: Institutional street (schools, health, campuses)
+    4: Commercial street

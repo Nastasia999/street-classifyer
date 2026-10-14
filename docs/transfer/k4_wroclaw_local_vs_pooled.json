@@ -3,17 +3,17 @@
     "wroclaw_local",
     "pooled"
   ],
-  "segments": 6632,
+  "segments": 7294,
   "T_cluster": {
-    "ARI": 0.907,
-    "NMI": 0.888
+    "ARI": 0.893,
+    "NMI": 0.877
   },
   "C_cluster": {
-    "ARI": 0.408,
-    "NMI": 0.524
+    "ARI": 0.404,
+    "NMI": 0.508
   },
   "morphotype": {
-    "ARI": 0.546,
-    "NMI": 0.723
+    "ARI": 0.54,
+    "NMI": 0.711
   }
 }

@@ -8,12 +8,18 @@ JSON so that ``index.html`` also works when opened straight from disk.
 City choice: a local run of the city is preferred; otherwise its labels come
 from the first pooled run (by folder name) that contains it. Runs whose
 ``summary.json`` says ``"web": false`` (experiments, test areas) are skipped.
+
+Typologies: besides that base run, a city is shown with every other typology
+that labelled it: another city's model (``<city>/applied_<model>/``) and the
+pooled runs that contain it. Their labels are stored next to the base labels
+(``T_cluster@1`` …), with the agreement with the city's own typology.
 """
 from __future__ import annotations
 
 import json
 import logging
 import shutil
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -21,6 +27,8 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import pyogrio
+
+from sklearn.metrics import adjusted_rand_score
 
 from ..labels import label
 
@@ -30,8 +38,8 @@ TRANSPORT_COLUMNS = ["lanes", "maxspeed", "pt_routes", "pt_stops_per_100m"]
 CONTEXT_COLUMNS = ["frontage", "poi_per_100m", "green_m2_per_100m", "building_age_median",
                    "fn_residential", "fn_commercial", "fn_social", "fn_industrial"]
 SHARE_COLUMNS = {"frontage", "fn_residential", "fn_commercial", "fn_social", "fn_industrial"}
-INFO_COLUMNS = ["seg_id", "name", "highway", "length", "lanes_imputed", "maxspeed_imputed",
-                "T_cluster", "C_cluster", "morphotype", "T_confidence", "C_confidence", "borderline"]
+LABEL_COLUMNS = ["T_cluster", "C_cluster", "morphotype", "T_confidence", "C_confidence", "borderline"]
+INFO_COLUMNS = ["seg_id", "name", "highway", "length", "lanes_imputed", "maxspeed_imputed"] + LABEL_COLUMNS
 # Fixed classes where a value has a meaning of its own, so the legend reads the same in every city.
 _SHARES = [(0.0, "0"), (1e-9, "< 25%"), (0.25, "25–50%"), (0.5, "50–75%"), (0.75, "≥ 75%")]
 FIXED_CLASSES = {
@@ -95,6 +103,57 @@ def pick_city_runs(output_root: Path) -> dict[str, tuple[Path, dict]]:
             if city not in chosen or (local and chosen[city][1]["cities"] != [city]):
                 chosen[city] = (run_dir, summary)
     return dict(sorted(chosen.items()))
+
+
+@dataclass
+class Typology:
+    """One labelling of a city: its own run, another city's model, or a pooled run."""
+
+    kind: str          # own | model | pooled
+    run_dir: Path
+    summary: dict
+    gpkg: Path
+
+
+def city_typologies(output_root: Path, city: str, base: tuple[Path, dict]) -> list[Typology]:
+    """The base run first, then other cities' models applied to the city, then pooled runs."""
+    run_dir, summary = base
+    out = [Typology("own" if summary["cities"] == [city] else "pooled", run_dir, summary,
+                    _gpkg(run_dir, summary, city))]
+    models, pooled = [], []
+    for d in sorted((output_root / city).glob("applied_*")):
+        path = d / "summary.json"
+        if path.exists() and (d / "morphotypes.gpkg").exists():
+            sm = json.loads(path.read_text(encoding="utf-8"))
+            if sm.get("web", True):
+                models.append(Typology("model", d, sm, d / "morphotypes.gpkg"))
+    for d, sm in _runs(output_root):
+        if len(sm.get("cities", [])) > 1 and city in sm["cities"] and d != run_dir:
+            if _gpkg(d, sm, city).exists():
+                pooled.append(Typology("pooled", d, sm, _gpkg(d, sm, city)))
+    return out + models + pooled
+
+
+def _crosswalk(own: pd.Series, other: pd.Series) -> dict:
+    """Counts of segments by own class (rows) and this typology's class (columns), C_null left out."""
+    ok = own.notna() & other.notna() & (own >= 0) & (other >= 0)
+    table = pd.crosstab(own[ok].astype(int), other[ok].astype(int))
+    return {"rows": [int(r) for r in table.index], "cols": [int(c) for c in table.columns],
+            "counts": table.to_numpy().astype(int).tolist()}
+
+
+def compare_with_own(own: pd.DataFrame, other: pd.DataFrame) -> dict:
+    """Agreement of another typology with the city's own one (ARI, 1 = identical partitions)."""
+    out = {}
+    for block, col in (("transport", "T_cluster"), ("context", "C_cluster")):
+        a, b = own[col], other[col]
+        ok = a.notna() & b.notna() & (a >= 0) & (b >= 0)
+        out[block] = {"ari": round(float(adjusted_rand_score(a[ok].astype(int), b[ok].astype(int))), 3),
+                      "crosswalk": _crosswalk(a, b)}
+    ok = own["morphotype"].notna() & other["morphotype"].notna()
+    out["morphotype"] = {"ari": round(float(adjusted_rand_score(own.loc[ok, "morphotype"],
+                                                                other.loc[ok, "morphotype"])), 3)}
+    return out
 
 
 # ── Layers ───────────────────────────────────────────────────────────────────
@@ -257,13 +316,19 @@ def _boolish(s: pd.Series) -> pd.Series:
                  else str(v).lower() in ("true", "1"))
 
 
-def city_geojson(gdf: gpd.GeoDataFrame, layers: list[dict]) -> dict:
-    cols = [c for c in INFO_COLUMNS if c in gdf.columns] + [l["id"] for l in layers if l["kind"] == "numeric"]
+def city_geojson(gdf: gpd.GeoDataFrame, layers: list[dict], keys: list[str] = ("",)) -> dict:
+    """Segments with their values; ``keys`` are the suffixes of the typologies' label columns."""
+    labels = [f"{c}{k}" for k in keys for c in LABEL_COLUMNS]
+    cols = ([c for c in INFO_COLUMNS + labels if c in gdf.columns]
+            + [l["id"] for l in layers if l["kind"] == "numeric"])
     props = gdf[list(dict.fromkeys(cols))].copy()
-    for c in ("T_cluster", "C_cluster"):
-        if c in props:
-            props[c] = props[c].astype("Int64").astype(object)
-    for c in ("borderline", "lanes_imputed", "maxspeed_imputed"):
+    for k in keys:
+        for c in (f"T_cluster{k}", f"C_cluster{k}"):
+            if c in props:
+                props[c] = props[c].astype("Int64").astype(object)
+        if f"borderline{k}" in props:
+            props[f"borderline{k}"] = _boolish(props[f"borderline{k}"])
+    for c in ("lanes_imputed", "maxspeed_imputed"):
         if c in props:
             props[c] = _boolish(props[c])
     geoms = gdf.geometry.to_crs(4326)
@@ -329,18 +394,6 @@ def _xlsx_label(run_dir: Path) -> str | None:
     return None
 
 
-def _order_by(run_dir: Path, summary: dict) -> dict[str, str]:
-    """Feature by which each block's clusters are numbered (older runs: read from the saved model)."""
-    if "order_by" in summary:
-        return summary["order_by"]
-    try:
-        from ..clustering import MorphotypeModel
-        model = MorphotypeModel.load(run_dir / "model.joblib")
-        return {b: model.block(b).order_by for b in ("transport", "context")}
-    except Exception:  # noqa: BLE001 — the legend then simply omits the ordering
-        return {}
-
-
 def _city_label(city: str, run_dir: Path, summary: dict, output_root: Path) -> str:
     labels = summary.get("area_labels", {})
     if city in labels:
@@ -362,47 +415,79 @@ def export_web(output_root: Path, web_dir: Path) -> list[str]:
         shutil.rmtree(data_dir)
     (data_dir / "cities").mkdir(parents=True)
 
+    labels = {c: _city_label(c, d, sm, output_root) for c, (d, sm) in chosen.items()}
+    name_of = lambda c: labels.get(c) or c.replace("_", " ").title()  # noqa: E731
     cities = []
     for city, (run_dir, summary) in chosen.items():
-        path = _gpkg(run_dir, summary, city)
-        gdf = gpd.read_file(path, layer="segments")
+        typologies = city_typologies(output_root, city, (run_dir, summary))
+        base = typologies[0]
+        gdf = gpd.read_file(base.gpkg, layer="segments")
         if "in_area" in gdf:
             gdf = gdf[_boolish(gdf["in_area"]).fillna(True).astype(bool)]
         gdf = gdf.reset_index(drop=True)
+        frames = [gdf]
+        for t in typologies[1:]:  # the same segments, labelled by another model
+            other = gpd.read_file(t.gpkg, layer="segments", ignore_geometry=True)
+            frames.append(gdf[["seg_id"]].merge(other[["seg_id"] + [c for c in LABEL_COLUMNS if c in other]
+                                                     + ["morphotype_name"]], on="seg_id", how="left"))
+        keys = [""] + [f"@{i}" for i in range(1, len(typologies))]
+        for key, frame in zip(keys[1:], frames[1:]):
+            for c in LABEL_COLUMNS:
+                if c in frame:
+                    gdf[f"{c}{key}"] = frame[c].to_numpy()
         layers = build_layers(gdf, summary)
-        geojson = city_geojson(gdf, layers)
+        geojson = city_geojson(gdf, layers, keys)
         bounds = gdf.geometry.to_crs(4326).total_bounds
         file = f"data/cities/{city}.js"
-        payload = {"segments": geojson, "area": _area_geojson(path)}
+        payload = {"segments": geojson, "area": _area_geojson(base.gpkg)}
         (web_dir / file).write_text(
             f"window.SM_DATA = window.SM_DATA || {{}};\nwindow.SM_DATA[{json.dumps(city)}] = "
             + json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + ";\n", encoding="utf-8")
         quality = summary.get("data_quality", {}).get(city, {})
+
+        entries = []
+        for t, key, frame in zip(typologies, keys, frames):
+            trained = t.summary.get("trained_on", [])
+            if t.kind == "own":
+                tid, text = "own", "Own typology"
+            elif t.kind == "model":
+                tid, text = "model-" + "-".join(trained), " + ".join(map(name_of, trained)) + " model"
+            else:
+                tid, text = "pooled-" + t.run_dir.name, "Pooled: " + " + ".join(map(name_of, trained))
+            entry = {
+                "id": tid, "key": key, "kind": t.kind, "label": text, "run": t.run_dir.name,
+                "trained_on": trained, "trained_on_labels": [name_of(c) for c in trained],
+                "stats": {"classified": int(frame["T_cluster"].notna().sum()),
+                          "borderline": int(_boolish(frame["borderline"]).fillna(False).sum()),
+                          "k": t.summary.get("k", {}),
+                          "mean_silhouette": t.summary.get("mean_silhouette", {})},
+                "clusters": {b: _clusters(frame, t.summary, b) for b in ("transport", "context")},
+                "morphotypes": _morphotypes(frame),
+            }
+            if typologies[0].kind == "own" and key:
+                entry["compare"] = compare_with_own(gdf, frame)
+            entries.append(entry)
+            log.info("Web map: %s, %s (%s)", city, text, t.run_dir.name)
+
         cities.append({
             "id": city,
-            "label": _city_label(city, run_dir, summary, output_root),
+            "label": name_of(city),
             "run": run_dir.name,
-            "mode": "local" if summary["cities"] == [city] else "pooled",
+            "mode": base.kind if base.kind == "own" else "pooled",
             "trained_on": summary.get("trained_on", []),
             "file": file,
-            "version": int(path.stat().st_mtime),
+            "version": int(max(t.gpkg.stat().st_mtime for t in typologies)),
             "bounds": [round(float(b), 5) for b in bounds],
             "stats": {
                 "segments": int(len(gdf)),
-                "classified": int(gdf["T_cluster"].notna().sum()),
-                "borderline": int(_boolish(gdf["borderline"]).fillna(False).sum()),
-                "k": summary.get("k", {}),
-                "mean_silhouette": summary.get("mean_silhouette", {}),
                 "lanes_imputed_share": quality.get("lanes_imputed_share"),
                 "maxspeed_imputed_share": quality.get("maxspeed_imputed_share"),
                 "unknown_function_share": quality.get("building_function_gfa_share", {}).get("unknown"),
             },
-            "clusters": {b: _clusters(gdf, summary, b) for b in ("transport", "context")},
-            "order_by": {b: {"id": f, "label": label(f, short=True)} for b, f in _order_by(run_dir, summary).items()},
-            "morphotypes": _morphotypes(gdf),
+            "typologies": entries,
             "layers": layers,
         })
-        log.info("Web map: %s from %s (%d segments)", city, run_dir.name, len(gdf))
+        log.info("Web map: %s from %s (%d segments, %d typologies)", city, run_dir.name, len(gdf), len(entries))
 
     manifest = {"generated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
                 "output_root": output_root.as_posix(), "cities": cities}

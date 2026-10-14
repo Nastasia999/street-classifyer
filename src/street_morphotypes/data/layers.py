@@ -100,10 +100,23 @@ class LayerRepository:
         return gdf[gdf.geometry.geom_type.isin(["LineString", "MultiLineString"])]
 
     def osm_network_graph(self):
-        """Raw OSM drive network (unprojected, simplified) for the network extent."""
+        """OSM drive network (unprojected, simplified) for the network extent.
+
+        The cache keeps the unsimplified graph. Simplification joins ways only
+        where nothing else meets and the street name stays the same: the graph
+        holds the drivable classes only, so a node that looks like a pass-through
+        may be where a driveway or footway joins, and a change of name marks it
+        as the end of a street. One-way/two-way changes always stay nodes.
+        """
         import osmnx as ox
 
-        path = self.cache_dir / "network.graphml"
+        G = self._osm_network_raw()
+        return ox.simplify_graph(G, edge_attrs_differ=["name"])
+
+    def _osm_network_raw(self):
+        import osmnx as ox
+
+        path = self.cache_dir / "network_raw.graphml"
         net = self.cfg.network
         filt = '["highway"~"^({})$"]'.format("|".join(net.highway_types))
         filt += '["area"!~"yes"]'
@@ -116,7 +129,7 @@ class LayerRepository:
         log.info("Network: downloading from OSM ...")
         G = self.overpass.call(
             ox.graph_from_polygon, polygon, custom_filter=filt,
-            simplify=True, retain_all=False, truncate_by_edge=True,
+            simplify=False, retain_all=False, truncate_by_edge=True,
         )
         ox.save_graphml(G, path)
         return G

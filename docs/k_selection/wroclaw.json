@@ -1,0 +1,144 @@
+{
+  "city": "wroclaw",
+  "runs": 30,
+  "subsample": 0.8,
+  "transport": {
+    "features": [
+      "lanes",
+      "maxspeed",
+      "pt_routes",
+      "pt_stops_per_100m",
+      "ss_nain_n",
+      "ss_nach_n",
+      "ss_nain_800",
+      "ss_nach_800"
+    ],
+    "best_mean_silhouette_k": 4,
+    "by_k": [
+      {
+        "k": 2,
+        "silhouette_mean": 0.312,
+        "silhouette_sd": 0.006,
+        "diff_from_best_mean": -0.036,
+        "diff_from_best_sd": 0.006,
+        "min_cluster_ok_share": 1.0,
+        "wins": 0,
+        "ARI_mean": 0.984,
+        "ARI_min": 0.911
+      },
+      {
+        "k": 3,
+        "silhouette_mean": 0.322,
+        "silhouette_sd": 0.003,
+        "diff_from_best_mean": -0.026,
+        "diff_from_best_sd": 0.001,
+        "min_cluster_ok_share": 1.0,
+        "wins": 0,
+        "ARI_mean": 0.986,
+        "ARI_min": 0.933
+      },
+      {
+        "k": 4,
+        "silhouette_mean": 0.348,
+        "silhouette_sd": 0.002,
+        "diff_from_best_mean": 0.0,
+        "diff_from_best_sd": 0.0,
+        "min_cluster_ok_share": 1.0,
+        "wins": 30,
+        "ARI_mean": 0.984,
+        "ARI_min": 0.936
+      },
+      {
+        "k": 5,
+        "silhouette_mean": 0.271,
+        "silhouette_sd": 0.004,
+        "diff_from_best_mean": -0.077,
+        "diff_from_best_sd": 0.004,
+        "min_cluster_ok_share": 1.0,
+        "wins": 0,
+        "ARI_mean": 0.968,
+        "ARI_min": 0.891
+      },
+      {
+        "k": 6,
+        "silhouette_mean": 0.277,
+        "silhouette_sd": 0.004,
+        "diff_from_best_mean": -0.071,
+        "diff_from_best_sd": 0.004,
+        "min_cluster_ok_share": 0.0,
+        "wins": 0,
+        "ARI_mean": 0.971,
+        "ARI_min": 0.918
+      }
+    ]
+  },
+  "context": {
+    "features": [
+      "frontage",
+      "poi_per_100m",
+      "green_m2_per_100m",
+      "fn_residential",
+      "fn_commercial",
+      "fn_social",
+      "fn_industrial"
+    ],
+    "best_mean_silhouette_k": 4,
+    "by_k": [
+      {
+        "k": 2,
+        "silhouette_mean": 0.416,
+        "silhouette_sd": 0.006,
+        "diff_from_best_mean": -0.027,
+        "diff_from_best_sd": 0.006,
+        "min_cluster_ok_share": 1.0,
+        "wins": 0,
+        "ARI_mean": 0.988,
+        "ARI_min": 0.97
+      },
+      {
+        "k": 3,
+        "silhouette_mean": 0.404,
+        "silhouette_sd": 0.004,
+        "diff_from_best_mean": -0.039,
+        "diff_from_best_sd": 0.001,
+        "min_cluster_ok_share": 1.0,
+        "wins": 0,
+        "ARI_mean": 0.992,
+        "ARI_min": 0.977
+      },
+      {
+        "k": 4,
+        "silhouette_mean": 0.443,
+        "silhouette_sd": 0.003,
+        "diff_from_best_mean": 0.0,
+        "diff_from_best_sd": 0.0,
+        "min_cluster_ok_share": 1.0,
+        "wins": 30,
+        "ARI_mean": 0.99,
+        "ARI_min": 0.984
+      },
+      {
+        "k": 5,
+        "silhouette_mean": 0.42,
+        "silhouette_sd": 0.004,
+        "diff_from_best_mean": -0.023,
+        "diff_from_best_sd": 0.006,
+        "min_cluster_ok_share": 1.0,
+        "wins": 0,
+        "ARI_mean": 0.989,
+        "ARI_min": 0.978
+      },
+      {
+        "k": 6,
+        "silhouette_mean": 0.449,
+        "silhouette_sd": 0.004,
+        "diff_from_best_mean": 0.006,
+        "diff_from_best_sd": 0.005,
+        "min_cluster_ok_share": 0.0,
+        "wins": 0,
+        "ARI_mean": 0.991,
+        "ARI_min": 0.975
+      }
+    ]
+  }
+}

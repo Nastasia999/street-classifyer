@@ -219,12 +219,14 @@ class PseudoJunctionMerger:
     """Joins segments that meet at a node where nothing else meets (degree 2).
 
     A segment must run from junction to junction. Nodes of degree 2 are left
-    behind by intersection consolidation (and by one-way/two-way changes or
-    user networks split at arbitrary points); the chain of segments through
-    them is merged into one segment. Geometry is joined exactly (no
-    straightening); attributes are combined: the most important ``highway``,
-    one-way if most of the length is one-way, all values of lanes / maxspeed /
-    names / OSM ways / user ids.
+    behind by intersection consolidation (and by user networks split at
+    arbitrary points); the chain of segments through them is merged into one
+    segment. A node stays a segment end when the street changes there: another
+    name (a missing name counts as a value of its own) or a one-way/two-way
+    change. The network holds the drivable classes only, so such a node may
+    well be a junction with a driveway or a footway. Geometry is joined exactly
+    (no straightening); attributes are combined: the most important
+    ``highway``, all values of lanes / maxspeed / OSM ways / user ids.
     """
 
     def __init__(self, highway_ranking: list[str]) -> None:
@@ -236,7 +238,11 @@ class PseudoJunctionMerger:
         for i in range(len(segs)):
             incident.setdefault(u[i], []).append(i)
             incident.setdefault(v[i], []).append(i)
-        pseudo = {n for n, ids in incident.items() if len(ids) == 2 and ids[0] != ids[1]}
+        names = [frozenset(map(str, as_list(x))) for x in segs["name"]]
+        oneway = segs["oneway"].to_numpy(dtype=bool)
+        pseudo = {n for n, ids in incident.items()
+                  if len(ids) == 2 and ids[0] != ids[1]
+                  and names[ids[0]] == names[ids[1]] and oneway[ids[0]] == oneway[ids[1]]}
         if not pseudo:
             return segs
 
@@ -276,8 +282,7 @@ class PseudoJunctionMerger:
         return gpd.GeoDataFrame(out, geometry="geometry", crs=segs.crs)
 
     def _combine(self, part: gpd.GeoDataFrame, terminals: list) -> pd.Series:
-        lengths = part.geometry.length.to_numpy()
-        oneway = bool(lengths[part["oneway"].to_numpy(dtype=bool)].sum() > lengths.sum() / 2)
+        oneway = bool(part["oneway"].iloc[0])  # the same along the chain, as is the name
         parts = shapely.MultiLineString(list(part.geometry))
         line = shapely.line_merge(parts, directed=True) if oneway else parts
         if line.geom_type != "LineString":  # directions mixed, or a two-way chain
@@ -292,8 +297,6 @@ class PseudoJunctionMerger:
         row["highway"] = resolve_highway(list(part["highway"]), self.ranking)
         for col in ("lanes_raw", "maxspeed_raw"):
             row[col] = [x for val in part[col] for x in as_list(val)]
-        names = list(dict.fromkeys(str(x) for val in part["name"] for x in as_list(val)))
-        row["name"] = names[0] if len(names) == 1 else (names or pd.NA)
         row["osm_ways"] = list(dict.fromkeys(w for ways in part["osm_ways"] for w in ways))
         ids = [x for val in part["user_id"] for x in as_list(val)]
         row["user_id"] = ids or pd.NA  # a merged user segment keeps all its source ids

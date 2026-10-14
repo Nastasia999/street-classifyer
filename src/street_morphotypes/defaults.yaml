@@ -75,7 +75,8 @@ network:
   unclassified_highway_types: [motorway_link, trunk_link, primary_link, secondary_link, tertiary_link]
   consolidate_tolerance_m: 10 # merge junction nodes closer than this (complex intersections); 0 = off
   merge_pseudo_junctions: true # join segments meeting at a node where no other street meets, so that
-                               # every segment runs junction to junction (user ids are kept as lists)
+                               # every segment runs junction to junction (user ids are kept as lists);
+                               # a change of name or of one-way status still ends a segment
   min_segment_length_m: 30    # shorter segments stay in the graph but are not classified
   snap_tolerance_m: 1.0       # endpoint snapping when the network comes from a file
   # Divided roads are kept as two carriageways (each side has its own context).
@@ -329,8 +330,8 @@ clustering:
   correlation_warning: 0.8    # |r| above it is reported by `scan`
 
 # Manual names override the generated ones, e.g.
-#   transport: {0: "Local street", 1: "Connector", 2: "Arterial"}
-#   morphotype: {"2-1": "Central high street"}      # key = "<T>-<C>"
+#   transport: {1: "Local street", 2: "Connector", 3: "Arterial"}
+#   morphotype: {"3-2": "Central high street"}      # key = "<T>-<C>"
 names:
   transport: {}
   context: {}
